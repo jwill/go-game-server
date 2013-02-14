@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Home</title>
+    <script src="/public/js/zepto.min.js" type="text/javascript"></script>
+    <script src="/public/js/jquery.min.js"></script>
+    <script src="/public/js/picoModal.js"></script>
+    <script src="/public/js/bootstrap.js" type="text/javascript"></script>
+    <script src="/public/js/coffee-script.js" type="text/javascript"></script>
+    
+    <link rel='stylesheet' href='/public/css/bootstrap.min.css'>
+    <link rel='stylesheet' href='/public/css/app.css'>
+  </head>
+  <body>
+    <div class='navbar'>
+      <div class='navbar-inner'>
+        <a class='brand' href='#'>Game Server</a>
+        <ul class='nav'>
+          <li><a id='roomName' href='#'></a></li>
+          <li><a href='#'>Create A Room</a></li>
+          <li><a href='#'>Join A Room</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class='row'>
+      <div id='playingArea'>
+        <canvas id='board'></canvas>
+      </div>
+      <div class='span4'>
+        <textarea id='chat' rows='20' cols='50'></textarea>
+        <br/>
+        <input type='text' id='message' columns='40'>
+        <input type='button' id='sendMessage' value='Send'>
+      </div>
+    </div>
+  </body>
+</html>

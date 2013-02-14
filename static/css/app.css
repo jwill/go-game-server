@@ -1,0 +1,17 @@
+#playingArea {
+  height: 100%;
+  margin-left: 30px;
+}
+
+#board {
+  height: 100%;
+  width: 70%;
+  float: left;
+  border: 1px;
+  border-style: solid;
+  border-color: black;
+}
+
+#chat {
+  /*height: 500px;*/
+}
