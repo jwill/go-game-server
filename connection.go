@@ -3,6 +3,7 @@ package main
 import (
 	"code.google.com/p/go.net/websocket"
 	"fmt"
+	"github.com/dchest/uniuri"
 )
 
 type connection struct {
@@ -37,14 +38,12 @@ func (c *connection) writer() {
 }
 
 func wsHandler(ws *websocket.Conn) {
-
-	player := &Player{conn: &connection{send: make(chan string, 256), ws: ws}}
+	player := &Player{id: uniuri.New(), conn: &connection{send: make(chan string, 256), ws: ws}}
 	gamehub.register <- player
-	gamehub.broadcast <- "Player entered lobby"
+	gamehub.broadcast <- "Player " + player.id + " entered lobby"
 	defer func() {
 		gamehub.unregister <- player
-		fmt.Println("closed")
-		gamehub.broadcast <- "Player exited."
+		gamehub.broadcast <- "Player " + player.id + " exited."
 	}()
 	go player.conn.writer()
 	player.conn.reader()

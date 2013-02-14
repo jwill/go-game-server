@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	//"code.google.com/p/go.net/websocket"
+	"github.com/sqp/godock/libs/log"
 )
 
 type GameHub struct {
 	// Registered players
-	players map[*Player]bool
+	players map[string]*Player
 
 	// Registered connections
 	connections map[*connection]bool
@@ -26,7 +26,7 @@ type GameHub struct {
 // singleton
 
 var gamehub = GameHub{
-	players:     make(map[*Player]bool),
+	players:     make(map[string]*Player),
 	broadcast:   make(chan string),
 	register:    make(chan *Player),
 	unregister:  make(chan *Player),
@@ -34,18 +34,27 @@ var gamehub = GameHub{
 }
 
 func (h *GameHub) Run() {
-	fmt.Println("GameHub")
+	log.SetPrefix("GameHub")
+	log.SetDebug(true)
+	log.Info("Started GameHub")
 
 	for {
 		select {
-		case p := <-h.register: // Player entered lobby.
-			h.players[p] = true
+
+		// Player entered lobby.
+		case p := <-h.register:
+			h.players[p.id] = p
 			h.connections[p.conn] = true
-			fmt.Println(h.players)
-		case p := <-h.unregister: // Player exited lobby.
-			delete(h.players, p)
+			log.Debug("Added Player " + p.id)
+
+		// Player exited website.
+		case p := <-h.unregister:
+			delete(h.players, p.id)
 			delete(h.connections, p.conn)
 			close(p.conn.send)
+			log.Debug("Player " + p.id + " exited")
+
+		// Distribute broadcast messages to all connections.
 		case m := <-h.broadcast:
 			for c := range h.connections {
 				select {
