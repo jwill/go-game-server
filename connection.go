@@ -1,7 +1,5 @@
 package main
 
-// Connection code: http://gary.beagledreams.com/page/go-websocket-chat.html
-
 import (
 	"code.google.com/p/go.net/websocket"
 	"fmt"
@@ -22,6 +20,7 @@ func (c *connection) reader() {
 		if err != nil {
 			break
 		}
+		// TODO Add logic to determine if broadcast message or game state/etc
 		gamehub.broadcast <- message
 	}
 	c.ws.Close()
@@ -38,13 +37,21 @@ func (c *connection) writer() {
 }
 
 func wsHandler(ws *websocket.Conn) {
-	c := &connection{send: make(chan string, 256), ws: ws}
-	gamehub.register <- c
-	defer func() { gamehub.unregister <- c }()
-	go c.writer()
-	c.reader()
+
+	player := &Player{conn: &connection{send: make(chan string, 256), ws: ws}}
+	gamehub.register <- player
+	gamehub.broadcast <- "Player entered lobby"
+	defer func() {
+		gamehub.unregister <- player
+		fmt.Println("closed")
+		gamehub.broadcast <- "Player exited."
+	}()
+	go player.conn.writer()
+	player.conn.reader()
 }
 
 type Player struct {
 	conn *connection
+	name string
+	id   string
 }

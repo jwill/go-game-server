@@ -6,6 +6,9 @@ import (
 )
 
 type GameHub struct {
+	// Registered players
+	players map[*Player]bool
+
 	// Registered connections
 	connections map[*connection]bool
 
@@ -14,32 +17,35 @@ type GameHub struct {
 	broadcast chan string
 
 	// Register requests from the connections
-	register chan *connection
+	register chan *Player
 
 	// Unregister requests from the connections
-	unregister chan *connection
+	unregister chan *Player
 }
 
 // singleton
 
 var gamehub = GameHub{
+	players:     make(map[*Player]bool),
 	broadcast:   make(chan string),
-	register:    make(chan *connection),
-	unregister:  make(chan *connection),
+	register:    make(chan *Player),
+	unregister:  make(chan *Player),
 	connections: make(map[*connection]bool),
 }
 
-
-
 func (h *GameHub) Run() {
 	fmt.Println("GameHub")
+
 	for {
 		select {
-		case c := <-h.register:
-			h.connections[c] = true
-		case c := <-h.unregister:
-			delete(h.connections, c)
-			close(c.send)
+		case p := <-h.register: // Player entered lobby.
+			h.players[p] = true
+			h.connections[p.conn] = true
+			fmt.Println(h.players)
+		case p := <-h.unregister: // Player exited lobby.
+			delete(h.players, p)
+			delete(h.connections, p.conn)
+			close(p.conn.send)
 		case m := <-h.broadcast:
 			for c := range h.connections {
 				select {
