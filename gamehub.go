@@ -3,7 +3,18 @@ package main
 import (
 	//"code.google.com/p/go.net/websocket"
 	"github.com/sqp/godock/libs/log"
+	//"github.com/vmihailenco/msgpack"
+	"fmt"
+	//"strconv"
+	//"strings"
+	"launchpad.net/rjson"
 )
+
+type Message struct {
+	Operation string
+	Sender    string
+	Message   string
+}
 
 type GameHub struct {
 	// Registered players
@@ -33,6 +44,17 @@ var gamehub = GameHub{
 	connections: make(map[*connection]bool),
 }
 
+func (h *GameHub) handleMessage(msg string) {
+	fmt.Println(msg)
+	var data Message
+	err := rjson.Unmarshal([]byte(msg), &data)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println(data.Message)
+
+}
+
 func (h *GameHub) Run() {
 	log.SetPrefix("GameHub")
 	log.SetDebug(true)
@@ -45,6 +67,7 @@ func (h *GameHub) Run() {
 		case p := <-h.register:
 			h.players[p.id] = p
 			h.connections[p.conn] = true
+			//p.conn.send <- "Id: "+p.id  -- Send ID
 			log.Debug("Added Player " + p.id)
 
 		// Player exited website.
@@ -56,6 +79,7 @@ func (h *GameHub) Run() {
 
 		// Distribute broadcast messages to all connections.
 		case m := <-h.broadcast:
+			h.handleMessage(m)
 			for c := range h.connections {
 				select {
 				case c.send <- m:
