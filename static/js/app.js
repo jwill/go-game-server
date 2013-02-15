@@ -12,21 +12,34 @@ App.prototype.setName = function() {
 }
 
 App.prototype.receiveMessage = function(msg) {
-  console.log(msg);
+  var self = this;
+  try {
+    var data = JSON.parse(msg.data);
+    switch(data.Operation) {
+      case 'chatMessage':
+        app.displayChatMessage(data.Sender, data.Message);
+        break;
+    }
+  } catch(Exception) {
+
+  }
+    console.log(data)
 }
 
 App.prototype.sendChatMessage = function() {
+  var text = $('#message').get(0).value;
   var data = {
-    'operation': 'chatMessage',
-    'sender': 'me',
-    'message': 'hi'
+    Operation: 'chatMessage',
+    Sender: 'me',
+    Message: text
   }
+  $('#message').get(0).value=""
   this.ws.send(JSON.stringify(data));
 }
 
 App.prototype.displayChatMessage = function(sender, messageText) {
   val = $('#chat').html();
-  line = sender + ": "+ message + '\n';
+  line = sender + ": "+ messageText + '\n';
   val += line;
   $('#chat').html(val)
 }

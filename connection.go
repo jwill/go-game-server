@@ -3,6 +3,7 @@ package main
 import (
 	"code.google.com/p/go.net/websocket"
 	"github.com/dchest/uniuri"
+	"launchpad.net/rjson"
 )
 
 type connection struct {
@@ -39,10 +40,10 @@ func (c *connection) writer() {
 func wsHandler(ws *websocket.Conn) {
 	player := &Player{id: uniuri.New(), conn: &connection{send: make(chan string, 256), ws: ws}}
 	gamehub.register <- player
-	gamehub.broadcast <- "Player " + player.id + " entered lobby"
+	gamehub.broadcast <- player.AnnouncePlayer(false)
 	defer func() {
 		gamehub.unregister <- player
-		gamehub.broadcast <- "Player " + player.id + " exited."
+		gamehub.broadcast <- player.AnnouncePlayer(true)
 	}()
 	go player.conn.writer()
 	player.conn.reader()
@@ -52,4 +53,21 @@ type Player struct {
 	conn *connection
 	name string
 	id   string
+}
+
+func (p *Player) AnnouncePlayer(isExiting bool) string {
+	msg := Message{
+		Operation: "chatMessage",
+		Sender:    "Server",
+		Message:   "",
+	}
+	if isExiting == false {
+		msg.Message = "Player " + p.id + " entered lobby"
+	} else {
+		msg.Message = "Player " + p.id + " exited."
+	}
+	b, err := rjson.Marshal(msg)
+	if err != nil {
+	}
+	return string(b)
 }
