@@ -41,6 +41,7 @@ func wsHandler(ws *websocket.Conn) {
 	player := &Player{id: uniuri.New(), conn: &connection{send: make(chan string, 256), ws: ws}}
 	gamehub.register <- player
 	gamehub.broadcast <- player.AnnouncePlayer(false)
+	player.SendPlayerIdentity()
 	defer func() {
 		gamehub.unregister <- player
 		gamehub.broadcast <- player.AnnouncePlayer(true)
@@ -57,8 +58,9 @@ type Player struct {
 
 func (p *Player) AnnouncePlayer(isExiting bool) string {
 	msg := Message{
-		Operation: "chatMessage",
+		Operation: "ChatMessage",
 		Sender:    "Server",
+		RoomID:    "Lobby",
 		Message:   "",
 	}
 	if isExiting == false {
@@ -70,4 +72,18 @@ func (p *Player) AnnouncePlayer(isExiting bool) string {
 	if err != nil {
 	}
 	return string(b)
+}
+
+// Send Initial information back to Player
+func (p *Player) SendPlayerIdentity() {
+	msg := Message{
+		Operation: "PlayerIdentity",
+		Sender:    "Server",
+		RoomID:    "Lobby",
+		Message:   p.id,
+	}
+	b, err := rjson.Marshal(msg)
+	if err != nil {
+	}
+	p.conn.send <- string(b)
 }

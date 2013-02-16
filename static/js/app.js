@@ -1,10 +1,15 @@
 var App = function() {
   this.setupClient();
-}
+  this.roomID = 'Lobby';
+  this.playerId = '';
+
+ }
 
 App.prototype.setupClient = function() {
   this.ws = new WebSocket("ws://localhost:8080/ws");
   this.ws.onmessage = this.receiveMessage;
+   $('#sendMessage').click(this.sendChatMessage);
+
 }
 
 App.prototype.setName = function() {
@@ -16,8 +21,11 @@ App.prototype.receiveMessage = function(msg) {
   try {
     var data = JSON.parse(msg.data);
     switch(data.Operation) {
-      case 'chatMessage':
+      case 'ChatMessage':
         app.displayChatMessage(data.Sender, data.Message);
+        break;
+      case 'PlayerIdentity':
+        app.playerId = data.Message;
         break;
     }
   } catch(Exception) {
@@ -29,13 +37,23 @@ App.prototype.receiveMessage = function(msg) {
 App.prototype.sendChatMessage = function() {
   var text = $('#message').get(0).value;
   var data = {
-    Operation: 'chatMessage',
-    Sender: 'me',
+    Operation: 'ChatMessage',
+    Sender: app.playerId,
+    RoomID: app.roomID,
     Message: text
   }
   $('#message').get(0).value=""
-  this.ws.send(JSON.stringify(data));
+  app.ws.send(JSON.stringify(data));
 }
+
+App.prototype.getRooms = function() {
+  var data = {
+    Operation: 'GetRoomList',
+    Sender: app.playerId
+  }
+  app.ws.send(JSON.stringify(data));
+}
+
 
 App.prototype.displayChatMessage = function(sender, messageText) {
   val = $('#chat').html();
