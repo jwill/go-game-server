@@ -8,11 +8,12 @@ type GameRoom struct {
 type Game interface {
 }
 
-func (room *GameRoom) joinRoom(playerId string) {
-	room.players[playerId] = true
+func (room *GameRoom) addPlayer(player *Player) {
+	room.players[player.id] = true
 	// Send message saying player was added.
 }
 
-func (room *GameRoom) leaveRoom(playerId string) {
-	delete(room.players, playerId)
+func (room *GameRoom) removePlayer(player *Player) {
+	delete(room.players, player.id)
+	// Send message saying player was removed
 }

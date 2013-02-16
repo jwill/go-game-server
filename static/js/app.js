@@ -27,6 +27,10 @@ App.prototype.receiveMessage = function(msg) {
       case 'PlayerIdentity':
         app.playerId = data.Message;
         break;
+      case 'GetGameTypes':
+        break;
+      case 'GetRoomList':
+        break;
     }
   } catch(Exception) {
 
@@ -54,6 +58,23 @@ App.prototype.getRooms = function() {
   app.ws.send(JSON.stringify(data));
 }
 
+App.prototype.joinRoom = function(roomId) {
+  var data = {
+    Operation: 'JoinRoom',
+    Sender: app.playerId,
+    Message: roomId
+  }
+  console.log(data);
+  app.ws.send(JSON.stringify(data));
+}
+
+App.prototype.getGameTypes = function() {
+  var data = {
+    Operation: 'GetGameTypes',
+    Sender: app.playerId
+  }
+  app.ws.send(JSON.stringify(data));
+}
 
 App.prototype.displayChatMessage = function(sender, messageText) {
   val = $('#chat').html();

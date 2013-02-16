@@ -57,34 +57,52 @@ func (h *GameHub) findConnectionForPlayer(playerId string) *connection {
 	return nil
 }
 
-func (h *GameHub) handleMessage(msg string) {
-	fmt.Println(msg)
+func (h *GameHub) handleMessage(msg string) bool {
+	var conn *connection
+	var player *Player
+	var handledMessage bool
+
 	var data Message
 	err := rjson.Unmarshal([]byte(msg), &data)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
+
+	log.Debug(msg)
+
+	// Get sender's connection
+	sender := data.Sender
+	if sender != "" && sender != "Server" {
+		player = h.players[sender]
+		conn = player.conn
+	}
+
 	switch data.Operation {
 	case "CreateRoom":
 		fmt.Println("CreateRoom")
 	case "JoinRoom":
 		fmt.Println("JoinRoom")
+		roomId := data.Message
+		room, err := h.rooms[roomId]
+		if err != false {
+			log.Debug("here")
+			room.addPlayer(player)
+			fmt.Println(room.players)
+		}
 	case "LeaveRoom":
 		fmt.Println("LeaveRoom")
 	case "StartGame":
 		fmt.Println("StartGame")
 	case "GetGameTypes":
-		fmt.Println("GetGames")
+		conn.send <- h.getGameTypes()
+		handledMessage = true
 	case "GetRoomList":
-		sender := data.Sender
-		conn := h.players[sender].conn
 		conn.send <- h.getRoomList()
-	case "ChatMessage":
-		fmt.Println("ChatMessage")
+		handledMessage = true
 	}
 
 	fmt.Println(data.Message)
-
+	return handledMessage
 }
 
 func (h *GameHub) getRoomList() string {
@@ -138,7 +156,7 @@ func (h *GameHub) Run() {
 	log.SetDebug(true)
 	log.Info("Started GameHub")
 
-	r := &GameRoom{}
+	r := &GameRoom{players: make(map[string]bool)}
 	r.roomId = "DemoRoom"
 	h.rooms[r.roomId] = r
 	fmt.Println(h.getRoomList())
@@ -161,14 +179,15 @@ func (h *GameHub) Run() {
 
 		// Distribute broadcast messages to all connections.
 		case m := <-h.broadcast:
-			h.handleMessage(m)
-			for c := range h.connections {
-				select {
-				case c.send <- m:
-				default:
-					delete(h.connections, c)
-					close(c.send)
-					go c.ws.Close()
+			if h.handleMessage(m) != true {
+				for c := range h.connections {
+					select {
+					case c.send <- m:
+					default:
+						delete(h.connections, c)
+						close(c.send)
+						go c.ws.Close()
+					}
 				}
 			}
 		}
