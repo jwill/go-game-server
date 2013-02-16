@@ -25,7 +25,6 @@ type GameHub struct {
 	connections map[*connection]bool
 
 	// Inbound messages from the connections
-	// Might change to msgpack later
 	broadcast chan string
 
 	// Register requests from the connections
@@ -80,17 +79,35 @@ func (h *GameHub) handleMessage(msg string) bool {
 	switch data.Operation {
 	case "CreateRoom":
 		fmt.Println("CreateRoom")
+		r := &GameRoom{players: make(map[string]bool)}
+		r.roomId = uniuri.New()
+		h.rooms[r.roomId] = r
+		fmt.Println(h.getRoomList())
+
+		// message to say room was created
+		// move player to room
 	case "JoinRoom":
 		fmt.Println("JoinRoom")
+		// TODO: Check if player is already in game room
+		// Store gameroom data also in player object?
 		roomId := data.Message
 		room, err := h.rooms[roomId]
 		if err != false {
-			log.Debug("here")
 			room.addPlayer(player)
+			log.Debug("Player " + player.id + " added to room " + roomId)
 			fmt.Println(room.players)
 		}
 	case "LeaveRoom":
 		fmt.Println("LeaveRoom")
+		// TODO: Verify player is already in game room
+		roomId := data.Message
+		room, err := h.rooms[roomId]
+		if err != false {
+			room.removePlayer(player)
+			log.Debug("Player " + player.id + " left room " + roomId)
+			fmt.Println(room.players)
+		}
+
 	case "StartGame":
 		fmt.Println("StartGame")
 	case "GetGameTypes":

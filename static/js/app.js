@@ -68,6 +68,27 @@ App.prototype.joinRoom = function(roomId) {
   app.ws.send(JSON.stringify(data));
 }
 
+App.prototype.leaveRoom = function(roomId) {
+  var data = {
+    Operation: 'LeaveRoom',
+    Sender: app.playerId,
+    Message: roomId
+  }
+  console.log(data);
+  app.ws.send(JSON.stringify(data));
+}
+
+App.prototype.createRoom = function(roomId) {
+  var data = {
+    Operation: 'CreateRoom',
+    Sender: app.playerId,
+    Message: ""
+  }
+  console.log(data);
+  app.ws.send(JSON.stringify(data));
+}
+
+
 App.prototype.getGameTypes = function() {
   var data = {
     Operation: 'GetGameTypes',
