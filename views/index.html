@@ -34,5 +34,56 @@
         <input type='button' id='sendMessage' value='Send'>
       </div>
     </div>
+
+    <!-- Modals -->
+
+    <div id='create-game-modal' class='modal hide'>
+      <div class='modal-header'>
+        <button type='button' class='close' data-dismiss='modal'
+            aria-hidden='true'>&times;</button>
+        <h3>Create A Game</h3>
+      </div>
+      <div class='modal-body'>
+        <label for='inputRoomName'>Enter Room Name:</label>
+          <input id='inputRoomName' class='xlarge' size='30'
+              type='text'></input>
+      </div>
+      <div class='modal-footer'>
+        <button class='btn'>Cancel</button>
+        <button class='btn btn-primary' id='btnCreateRoom'>Create
+          Room</button>
+      </div>
+    </div>
+
+    <div id='name-modal' class='modal hide'>
+      <div class='modal-header'>
+        <button type='button' class='close' data-dismiss='modal'
+            aria-hidden='true'>&times;</button>
+        <h3>Set Player Name</h3>
+      </div>
+      <div class='modal-body'></div>
+      <div class='modal-footer'>
+        <button class='btn'>Cancel</button>
+        <button class='btn btn-primary' id='btnSaveName'>Save</button> 
+      </div>
+    </div>
+
+    <div id='join-room-modal' class='modal hide'>
+      <div class='modal-header'>
+        <button type='button' class='close' data-dismiss='modal'
+            aria-hidden='true'>&times;</button>
+        <h3>Join A Room</h3>
+      </div>
+      <div class='modal-body'>
+        <label for='roomSelect'>Select A Room:</label>
+        <select id='roomSelect' class='normalSelect'></select>
+      </div>
+      <div class='modal-footer'>
+        <button class='btn'>Cancel</button>
+        <button class='btn btn-primary' id='btnJoinRoom'>Join</button> 
+      </div>
+    </div>
+    <!-- End Modals -->
+
   </body>
 </html>
