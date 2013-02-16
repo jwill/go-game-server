@@ -2,11 +2,9 @@
 <html>
   <head>
     <title>Home</title>
-    <script src="/public/js/zepto.min.js" type="text/javascript"></script>
     <script src="/public/js/jquery.min.js"></script>
     <script src="/public/js/picoModal.js"></script>
     <script src="/public/js/bootstrap.js" type="text/javascript"></script>
-    <script src="/public/js/coffee-script.js" type="text/javascript"></script>
     <script src="/public/js/app.js" type="text/javascript"></script>
     
     <link rel='stylesheet' href='/public/css/bootstrap.min.css'>
@@ -18,8 +16,8 @@
         <a class='brand' href='#'>Game Server</a>
         <ul class='nav'>
           <li><a id='roomName' href='#'></a></li>
-          <li><a href='#'>Create A Room</a></li>
-          <li><a href='#'>Join A Room</a></li>
+          <li><a href='javascript:app.toggleCreateRoomModal()'>Create A Room</a></li>
+          <li><a href='javascript:app.getRooms()'>Join A Room</a></li>
         </ul>
       </div>
     </div>
@@ -49,7 +47,8 @@
               type='text'></input>
       </div>
       <div class='modal-footer'>
-        <button class='btn'>Cancel</button>
+        <button class='btn' class='close' data-dismiss='modal'
+            aria-hidden='true'>Cancel</button>
         <button class='btn btn-primary' id='btnCreateRoom'>Create
           Room</button>
       </div>
@@ -63,7 +62,8 @@
       </div>
       <div class='modal-body'></div>
       <div class='modal-footer'>
-        <button class='btn'>Cancel</button>
+        <button class='btn' class='close' data-dismiss='modal'
+            aria-hidden='true'>Cancel</button>
         <button class='btn btn-primary' id='btnSaveName'>Save</button> 
       </div>
     </div>
@@ -79,7 +79,8 @@
         <select id='roomSelect' class='normalSelect'></select>
       </div>
       <div class='modal-footer'>
-        <button class='btn'>Cancel</button>
+        <button class='btn' class='close' data-dismiss='modal'
+            aria-hidden='true'>Cancel</button>
         <button class='btn btn-primary' id='btnJoinRoom'>Join</button> 
       </div>
     </div>

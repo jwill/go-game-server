@@ -2,7 +2,8 @@ var App = function() {
   this.setupClient();
   this.roomID = 'Lobby';
   this.playerId = '';
-
+  
+  this.setupModals();
  }
 
 App.prototype.setupClient = function() {
@@ -10,6 +11,12 @@ App.prototype.setupClient = function() {
   this.ws.onmessage = this.receiveMessage;
    $('#sendMessage').click(this.sendChatMessage);
 
+}
+
+App.prototype.setupModals = function() {
+  $('#btnCreateRoom').click(this.createRoom);
+  $('#btnSaveName').click(function(){});
+  $('#btnJoinRoom').click(this.joinRoom);
 }
 
 App.prototype.setName = function() {
@@ -30,6 +37,8 @@ App.prototype.receiveMessage = function(msg) {
       case 'GetGameTypes':
         break;
       case 'GetRoomList':
+        app.roomList = data.MessageArray;
+        app.toggleJoinRoomModal(app.roomList);
         break;
     }
   } catch(Exception) {
@@ -58,7 +67,8 @@ App.prototype.getRooms = function() {
   app.ws.send(JSON.stringify(data));
 }
 
-App.prototype.joinRoom = function(roomId) {
+App.prototype.joinRoom = function() {
+  var roomId = $('#roomSelect').get(0).value; 
   var data = {
     Operation: 'JoinRoom',
     Sender: app.playerId,
@@ -78,6 +88,23 @@ App.prototype.leaveRoom = function(roomId) {
   app.ws.send(JSON.stringify(data));
 }
 
+App.prototype.toggleCreateRoomModal = function() {
+  $('#create-game-modal').modal('toggle');
+}
+
+App.prototype.toggleSetNameModal = function() {
+  $('#name-modal').modal('toggle');
+}
+
+App.prototype.toggleJoinRoomModal = function(roomList) {
+  $('#roomSelect').empty();
+  for (var i = 0; i<roomList.length; i++) {
+    var v = roomList[i];
+    $('#roomSelect').append('<option value='+v+'>'+v+'</option>')
+  }
+  $('#join-room-modal').modal('toggle');
+}
+
 App.prototype.createRoom = function(roomId) {
   var data = {
     Operation: 'CreateRoom',
@@ -86,6 +113,7 @@ App.prototype.createRoom = function(roomId) {
   }
   console.log(data);
   app.ws.send(JSON.stringify(data));
+  app.toggleCreateRoomModal();
 }
 
 
