@@ -8,8 +8,8 @@ import (
 )
 
 type TicTacToeAI struct {
-	depthLimit   uint8
-	currentDepth uint8
+	depthLimit   int
+	currentDepth int
 	board        [3][3]string
 	bestMove     []int
 }
@@ -19,11 +19,10 @@ func GetOtherPlayer(currentPlayer string) string {
 		return "O"
 	}
 	return "X"
-
 }
 
 func (t *TicTacToeAI) miniMax(currentPlayer string) int {
-	log.Debug("Starting MiniMax run")
+	//log.Debug("Starting MiniMax run")
 	best := -10
 
 	if t.currentDepth == t.depthLimit {
@@ -37,17 +36,19 @@ func (t *TicTacToeAI) miniMax(currentPlayer string) int {
 	if t.checkForWin() == GetOtherPlayer(currentPlayer) {
 		return -1
 	}
+
 	t.currentDepth++
 
 	newBoard := t.board
 	moves := t.generateMovesFromBoard(currentPlayer)
+  fmt.Println(moves)
 
 	for i := 0; i < len(moves); i++ {
 		m := moves[i]
 		newBoard[m[0]][m[1]] = currentPlayer
 		value := -t.miniMax(GetOtherPlayer(currentPlayer))
 		// reverse move
-		newBoard[m[0]][m[1]] = ""
+		defer func(){newBoard[m[0]][m[1]] = ""}
 		if value > best {
 			best = value
 			t.bestMove = m
@@ -89,7 +90,46 @@ func (t *TicTacToeAI) completeMove(letter string, move []int) {
 }
 
 func (t *TicTacToeAI) checkForWin() string {
-	return ""
+	winner := ""
+	emptySpaces := 0
+	// yeah I know this is a lazy algo, but it works ;)
+	lines := [][][2]int{
+		{{0, 0}, {1, 1}, {2, 2}},
+		{{0, 2}, {1, 1}, {2, 0}},
+		{{0, 0}, {0, 1}, {0, 2}},
+		{{1, 0}, {1, 1}, {1, 2}},
+		{{2, 0}, {2, 1}, {2, 2}},
+		{{0, 0}, {1, 0}, {2, 0}},
+		{{0, 1}, {1, 1}, {2, 1}},
+		{{0, 2}, {1, 2}, {2, 2}},
+	}
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		a := t.board[line[0][0]][line[0][1]]
+		b := t.board[line[1][0]][line[1][1]]
+		c := t.board[line[2][0]][line[2][1]]
+
+		if a == "-" {
+			emptySpaces++
+		}
+		if b == "-" {
+			emptySpaces++
+		}
+		if c == "-" {
+			emptySpaces++
+		}
+
+		if a != "" && a == b && a == c {
+			winner = a
+			log.Debug("winner:" + a)
+			return winner
+		}
+	}
+	if emptySpaces == 0 {
+		log.Debug("winner:draw")
+		winner = "draw"
+	}
+	return winner
 }
 
 func (t *TicTacToeAI) computerTurn() {
@@ -107,39 +147,6 @@ func (t *TicTacToeAI) PrintBoard() {
 }
 
 /*
-TTT.checkForWin = function (board) {
-	var lines = [
-		[[0,0], [1,1], [2,2]],	// diagonals
-		[[0,2], [1,1], [2,0]], 	
-		[[0,0], [0,1], [0,2]],	// verticals
-		[[1,0], [1,1], [1,2]],
-		[[2,0], [2,1], [2,2]],
-		[[0,0], [1,0], [2,0]],	// horizontals
-		[[0,1], [1,1], [2,1]],
-		[[0,2], [1,2], [2,2]]
-	]
-
-	winner = null;
-	var emptySpaces = 0;
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i];
-		var a = board[line[0][0]][line[0][1]];
-		var b = board[line[1][0]][line[1][1]];
-		var c = board[line[2][0]][line[2][1]];
-
-		if (a == "") emptySpaces++;
-		if (b == "") emptySpaces++;
-		if (c == "") emptySpaces++;
-
-		if (a != "" && a == b && a == c)
-			TTT.game.emit("winner",[a])
-			//winner = a;
-	}
-	if (emptySpaces == 0) 
-		TTT.game.emit("draw")
-
-	return "";
-}
 
 TTT.computerTurn =  function() {
 	// Randomize starting position
