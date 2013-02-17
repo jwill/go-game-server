@@ -178,6 +178,8 @@ func (h *GameHub) Run() {
 	h.rooms[r.roomId] = r
 	fmt.Println(h.getRoomList())
 
+	InitTest()
+
 	for {
 		select {
 
@@ -209,4 +211,16 @@ func (h *GameHub) Run() {
 			}
 		}
 	}
+}
+
+func InitTest() {
+	ai := &TicTacToeAI{}
+	ai.board = [3][3]string{{"X", "-", "-"}, {"-", "X", "-"}, {"-", "O", "O"}}
+	ai.PrintBoard()
+
+	moves := ai.generateMovesFromBoard("O")
+	fmt.Println(moves)
+	x := ai.pickRandomMove("O")
+	ai.completeMove("O", x)
+	ai.PrintBoard()
 }

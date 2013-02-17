@@ -40,11 +40,11 @@ func (c *connection) writer() {
 func wsHandler(ws *websocket.Conn) {
 	player := &Player{id: uniuri.New(), conn: &connection{send: make(chan string, 256), ws: ws}}
 	gamehub.register <- player
-	gamehub.broadcast <- player.AnnouncePlayer(false)
+	gamehub.broadcast <- player.AnnouncePlayer("Lobby", false)
 	player.SendPlayerIdentity()
 	defer func() {
 		gamehub.unregister <- player
-		gamehub.broadcast <- player.AnnouncePlayer(true)
+		gamehub.broadcast <- player.AnnouncePlayer("", true)
 	}()
 	go player.conn.writer()
 	player.conn.reader()
@@ -56,17 +56,17 @@ type Player struct {
 	id   string
 }
 
-func (p *Player) AnnouncePlayer(isExiting bool) string {
+func (p *Player) AnnouncePlayer(roomId string, isExiting bool) string {
 	msg := Message{
 		Operation: "ChatMessage",
 		Sender:    "Server",
-		RoomID:    "Lobby",
+		RoomID:    roomId,
 		Message:   "",
 	}
 	if isExiting == false {
-		msg.Message = "Player " + p.id + " entered lobby"
+		msg.Message = "Player " + p.id + " entered " + roomId + "."
 	} else {
-		msg.Message = "Player " + p.id + " exited."
+		msg.Message = "Player " + p.id + " exited " + roomId + "."
 	}
 	b, err := rjson.Marshal(msg)
 	if err != nil {
