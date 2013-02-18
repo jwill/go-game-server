@@ -1,8 +1,11 @@
 package main
 
+// Improved original JS algo with heuristics from http://www.ntu.edu.sg/home/ehchua/programming/java/JavaGame_TicTacToe_AI.html
+
 import (
 	"fmt"
 	"github.com/sqp/godock/libs/log"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -11,7 +14,8 @@ type TicTacToeAI struct {
 	depthLimit   int
 	currentDepth int
 	board        [3][3]string
-	bestMove     []int
+	myLetter     string
+	//bestMove     []int
 }
 
 func GetOtherPlayer(currentPlayer string) string {
@@ -21,48 +25,68 @@ func GetOtherPlayer(currentPlayer string) string {
 	return "X"
 }
 
-func (t *TicTacToeAI) miniMax(currentPlayer string) int {
+func (t *TicTacToeAI) miniMax(currentPlayer string) []int {
 	//log.Debug("Starting MiniMax run")
-	best := -10
+	var bestScore int
+	bestMove := []int{-1, -1}
+
+	if currentPlayer == t.myLetter {
+		bestScore = math.MinInt32
+	} else {
+		bestScore = math.MaxInt32
+	}
+
+	currentScore := -1
+
+	moves := t.generateMovesFromBoard()
+	if len(moves) == 0 {
+		fmt.Println("0 moves left")
+		if t.checkForWin() == currentPlayer {
+			return 1
+		}
+
+		if t.checkForWin() == GetOtherPlayer(currentPlayer) {
+			return -1
+		} else {
+			return 0
+		}
+
+	}
 
 	if t.currentDepth == t.depthLimit {
+		fmt.Println("dfd")
 		return 0
 	}
 
-	if t.checkForWin() == currentPlayer {
-		return 1
-	}
-
-	if t.checkForWin() == GetOtherPlayer(currentPlayer) {
-		return -1
-	}
-
 	t.currentDepth++
+	fmt.Println("current depth:", t.currentDepth)
 
-	newBoard := t.board
-	moves := t.generateMovesFromBoard(currentPlayer)
-  fmt.Println(moves)
+	newBoard := board
+	moves := t.generateMovesFromBoard(newBoard, currentPlayer)
+	fmt.Println(moves)
 
-	for i := 0; i < len(moves); i++ {
+	var i int
+	for i = 0; i < len(moves); i++ {
 		m := moves[i]
+		fmt.Println(i)
+		fmt.Println(m)
 		newBoard[m[0]][m[1]] = currentPlayer
-		value := -t.miniMax(GetOtherPlayer(currentPlayer))
+		value := -t.miniMax(newBoard, GetOtherPlayer(currentPlayer))
 		// reverse move
-		defer func(){newBoard[m[0]][m[1]] = ""}
+		newBoard[m[0]][m[1]] = "-"
 		if value > best {
 			best = value
-			t.bestMove = m
+			bestMove = m
 		}
 	}
 	if best == -10 {
 		return 0
 	}
-	// Should nver reach this point
-	return -20
+	return -333
 
 }
 
-func (t *TicTacToeAI) generateMovesFromBoard(player string) []([]int) {
+func (t *TicTacToeAI) generateMovesFromBoard() []([]int) {
 	b := t.board
 	fmt.Println(b)
 	emptySlots := make([]([]int), 0)
@@ -73,12 +97,13 @@ func (t *TicTacToeAI) generateMovesFromBoard(player string) []([]int) {
 			}
 		}
 	}
+	fmt.Println("emptySlots:", emptySlots)
 	return emptySlots
 }
 
 func (t *TicTacToeAI) pickRandomMove(letter string) []int {
 	rand.Seed(time.Now().Unix())
-	moves := t.generateMovesFromBoard(letter)
+	moves := t.generateMovesFromBoard(t.board, letter)
 	num := rand.Intn(len(moves))
 	fmt.Println("random: ", num)
 	fmt.Println(moves[num])
@@ -87,6 +112,7 @@ func (t *TicTacToeAI) pickRandomMove(letter string) []int {
 
 func (t *TicTacToeAI) completeMove(letter string, move []int) {
 	t.board[move[0]][move[1]] = letter
+	t.PrintBoard()
 }
 
 func (t *TicTacToeAI) checkForWin() string {

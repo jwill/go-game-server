@@ -214,13 +214,20 @@ func (h *GameHub) Run() {
 }
 
 func InitTest() {
-	ai := &TicTacToeAI{}
-	ai.board = [3][3]string{{"X", "-", "-"}, {"-", "X", "-"}, {"-", "O", "O"}}
+	ai := &TicTacToeAI{depthLimit: 300}
+	ai.board = [3][3]string{{"-", "-", "O"}, {"-", "-", "O"}, {"-", "-", "-"}}
 	ai.PrintBoard()
 
-	moves := ai.generateMovesFromBoard("O")
-	fmt.Println(moves)
-	x := ai.pickRandomMove("O")
-	ai.completeMove("O", x)
+	//ai.completeMove("X", []int{0,0})
 	ai.PrintBoard()
+	ai.miniMax(ai.board, "X")
+	defer ai.completeMove("X", ai.bestMove)
+	ai.PrintBoard()
+
+	//moves := ai.generateMovesFromBoard("O")
+	//fmt.Println(moves)
+	//	x := ai.pickRandomMove("O")
+	//ai.completeMove("O", x)
+	//ai.PrintBoard()
+	//fmt.Println(ai.checkForWin())
 }
