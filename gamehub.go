@@ -178,7 +178,7 @@ func (h *GameHub) Run() {
 	h.rooms[r.roomId] = r
 	fmt.Println(h.getRoomList())
 
-	InitTest()
+	//InitTest()
 
 	for {
 		select {
@@ -213,15 +213,20 @@ func (h *GameHub) Run() {
 	}
 }
 
+//Sample setup of TicTacToe Board and AI
+/*
+
 func InitTest() {
-	ai := &TicTacToeAI{depthLimit: 300}
-	ai.board = [3][3]string{{"-", "-", "O"}, {"-", "-", "O"}, {"-", "-", "-"}}
-	ai.PrintBoard()
+	ai := &TicTacToeAI{compLetter: "X"}
+	ai.initBoard()
+  ai.PrintBoard()
 
 	//ai.completeMove("X", []int{0,0})
 	ai.PrintBoard()
-	ai.miniMax(ai.board, "X")
-	defer ai.completeMove("X", ai.bestMove)
+	ai.compLetter = "X"
+	f := ai.miniMax(5, "X")
+	fmt.Println(f)
+	defer ai.completeMove("X", []int{f[1], f[2]})
 	ai.PrintBoard()
 
 	//moves := ai.generateMovesFromBoard("O")
@@ -231,3 +236,4 @@ func InitTest() {
 	//ai.PrintBoard()
 	//fmt.Println(ai.checkForWin())
 }
+*/

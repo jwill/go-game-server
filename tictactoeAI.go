@@ -3,7 +3,7 @@ package main
 // Improved original JS algo with heuristics from http://www.ntu.edu.sg/home/ehchua/programming/java/JavaGame_TicTacToe_AI.html
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/sqp/godock/libs/log"
 	"math"
 	"math/rand"
@@ -11,11 +11,8 @@ import (
 )
 
 type TicTacToeAI struct {
-	depthLimit   int
-	currentDepth int
-	board        [3][3]string
-	myLetter     string
-	//bestMove     []int
+	board      [3][3]string
+	compLetter string
 }
 
 func GetOtherPlayer(currentPlayer string) string {
@@ -25,71 +22,128 @@ func GetOtherPlayer(currentPlayer string) string {
 	return "X"
 }
 
-func (t *TicTacToeAI) miniMax(currentPlayer string) []int {
-	//log.Debug("Starting MiniMax run")
+func (t *TicTacToeAI) initBoard() {
+	t.board = [3][3]string{{"-", "-", "-"}, {"-", "-", "-"}, {"-", "-", "-"}}
+}
+
+func (t *TicTacToeAI) evaluate() int {
+	score := 0
+	lines := [][][2]int{
+		{{0, 0}, {1, 1}, {2, 2}},
+		{{0, 2}, {1, 1}, {2, 0}},
+		{{0, 0}, {0, 1}, {0, 2}},
+		{{1, 0}, {1, 1}, {1, 2}},
+		{{2, 0}, {2, 1}, {2, 2}},
+		{{0, 0}, {1, 0}, {2, 0}},
+		{{0, 1}, {1, 1}, {2, 1}},
+		{{0, 2}, {1, 2}, {2, 2}},
+	}
+	for _, value := range lines {
+		a := t.evaluateLine(value)
+		score = score + a
+	}
+	return score
+}
+
+func (t *TicTacToeAI) evaluateLine(line [][2]int) int {
+	var score int
+	v1 := line[0]
+	v2 := line[1]
+	v3 := line[2]
+	otherPlayer := GetOtherPlayer(t.compLetter)
+
+	// First cell
+	if t.board[v1[0]][v1[1]] == t.compLetter {
+		score = 1
+	} else if t.board[v1[0]][v1[1]] == otherPlayer {
+		score = -1
+	}
+
+	// Second cell
+	if t.board[v2[0]][v2[1]] == t.compLetter {
+		if score == 1 {
+			score = 10
+		} else if score == -1 {
+			return 0
+		}
+	} else if t.board[v2[0]][v2[1]] == otherPlayer {
+		if score == -1 {
+			score = -10
+		} else if score == 1 {
+			return 0
+		} else {
+			score = -1
+		}
+	}
+
+	// Third cell
+	if t.board[v3[0]][v3[1]] == t.compLetter {
+		if score > 0 {
+			score *= 10
+		} else if score < 0 {
+			return 0
+		} else {
+			score = 1
+		}
+	} else if t.board[v2[0]][v2[1]] == otherPlayer {
+		if score < 0 {
+			score *= 10
+		} else if score > 1 {
+			return 0
+		} else {
+			score = -1
+		}
+	}
+	return score
+
+}
+
+func (t *TicTacToeAI) miniMax(depth int, currentPlayer string) []int {
 	var bestScore int
 	bestMove := []int{-1, -1}
 
-	if currentPlayer == t.myLetter {
+	if currentPlayer == t.compLetter {
 		bestScore = math.MinInt32
 	} else {
 		bestScore = math.MaxInt32
 	}
 
-	currentScore := -1
+	currentScore := 0
 
 	moves := t.generateMovesFromBoard()
-	if len(moves) == 0 {
-		fmt.Println("0 moves left")
-		if t.checkForWin() == currentPlayer {
-			return 1
-		}
-
-		if t.checkForWin() == GetOtherPlayer(currentPlayer) {
-			return -1
-		} else {
-			return 0
-		}
-
-	}
-
-	if t.currentDepth == t.depthLimit {
-		fmt.Println("dfd")
-		return 0
-	}
-
-	t.currentDepth++
-	fmt.Println("current depth:", t.currentDepth)
-
-	newBoard := board
-	moves := t.generateMovesFromBoard(newBoard, currentPlayer)
-	fmt.Println(moves)
-
-	var i int
-	for i = 0; i < len(moves); i++ {
-		m := moves[i]
-		fmt.Println(i)
-		fmt.Println(m)
-		newBoard[m[0]][m[1]] = currentPlayer
-		value := -t.miniMax(newBoard, GetOtherPlayer(currentPlayer))
-		// reverse move
-		newBoard[m[0]][m[1]] = "-"
-		if value > best {
-			best = value
-			bestMove = m
+	if len(moves) == 0 || depth == 0 {
+		bestScore = t.evaluate()
+	} else {
+		for _, v := range moves {
+			t.board[v[0]][v[1]] = currentPlayer
+			if currentPlayer == t.compLetter {
+				currentScore = t.miniMax(depth-1, GetOtherPlayer(currentPlayer))[0]
+				if currentScore > bestScore {
+					bestScore = currentScore
+					bestMove = v
+				}
+			} else { // oppSeed is minimizing player
+				currentScore = t.miniMax(depth-1, t.compLetter)[0]
+				if currentScore < bestScore {
+					bestScore = currentScore
+					bestMove = v
+				}
+			}
+			// Undo move
+			t.board[v[0]][v[1]] = "-"
 		}
 	}
-	if best == -10 {
-		return 0
-	}
-	return -333
-
+	return []int{bestScore, bestMove[0], bestMove[1]}
 }
 
 func (t *TicTacToeAI) generateMovesFromBoard() []([]int) {
-	b := t.board
-	fmt.Println(b)
 	emptySlots := make([]([]int), 0)
+	b := t.board
+
+	if t.checkForWin() != "" {
+		return emptySlots
+	}
+
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
 			if b[i][j] == "" || b[i][j] == "-" {
@@ -97,20 +151,20 @@ func (t *TicTacToeAI) generateMovesFromBoard() []([]int) {
 			}
 		}
 	}
-	fmt.Println("emptySlots:", emptySlots)
 	return emptySlots
 }
 
 func (t *TicTacToeAI) pickRandomMove(letter string) []int {
 	rand.Seed(time.Now().Unix())
-	moves := t.generateMovesFromBoard(t.board, letter)
+	moves := t.generateMovesFromBoard()
 	num := rand.Intn(len(moves))
-	fmt.Println("random: ", num)
-	fmt.Println(moves[num])
 	return moves[num]
 }
 
 func (t *TicTacToeAI) completeMove(letter string, move []int) {
+	if move[0] == -1 || move[1] == -1 {
+		return
+	}
 	t.board[move[0]][move[1]] = letter
 	t.PrintBoard()
 }
@@ -145,21 +199,17 @@ func (t *TicTacToeAI) checkForWin() string {
 			emptySpaces++
 		}
 
-		if a != "" && a == b && a == c {
+		if a != "-" && a == b && a == c {
 			winner = a
-			log.Debug("winner:" + a)
+			//log.Debug("winner:" + a)
 			return winner
 		}
 	}
 	if emptySpaces == 0 {
-		log.Debug("winner:draw")
+		//log.Debug("winner:draw")
 		winner = "draw"
 	}
 	return winner
-}
-
-func (t *TicTacToeAI) computerTurn() {
-
 }
 
 func (t *TicTacToeAI) PrintBoard() {
@@ -171,27 +221,3 @@ func (t *TicTacToeAI) PrintBoard() {
 		log.Debug(a + b + c)
 	}
 }
-
-/*
-
-TTT.computerTurn =  function() {
-	// Randomize starting position
-	moves = TTT.generateMovesFromBoard(TTT.gameBoard, "O");
-	clickedCell = null;
-	if (moves.length == 9) 
-		clickedCell = TTT.pickRandomMove();	
-	else {
-		mini = new MiniMax();
-		move = mini.miniMax(TTT.gameBoard, "O");
-		clickedCell = TTT.cellContainer.findByPos(move[0], move[1]);
-		if (TTT.isGameOver) {
-            clickedCell.toggleState();
-            return;
-        }
-		if (clickedCell === undefined) {
-			clickedCell = TTT.pickRandomMove();
-		}
-	}
-	clickedCell.toggleState();
-}
-*/
