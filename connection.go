@@ -56,6 +56,18 @@ type Player struct {
 	id   string
 }
 
+func (p *Player) ChangeNick(newNick string) Message {
+	p.name = newNick
+
+	msg := Message{
+		Operation: "ChangeNick",
+		Sender:    "Server",
+		RoomID:    "Lobby", // TODO: set room
+		Message:   newNick,
+	}
+	return msg
+}
+
 func (p *Player) AnnouncePlayer(roomId string, isExiting bool) string {
 	msg := Message{
 		Operation: "ChatMessage",

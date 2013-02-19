@@ -10,6 +10,7 @@ App.prototype.setupClient = function() {
   this.ws = new WebSocket("ws://localhost:8080/ws");
   this.ws.onmessage = this.receiveMessage;
    $('#sendMessage').click(this.sendChatMessage);
+  this.time = new Date().getTime();
 
 }
 
@@ -19,8 +20,13 @@ App.prototype.setupModals = function() {
   $('#btnJoinRoom').click(this.joinRoom);
 }
 
-App.prototype.setName = function() {
-
+App.prototype.changeNick = function(newNick) {
+  var data = {
+    Operation: 'ChangeNick',
+    Sender: app.playerId,
+    Message: newNick
+  }
+  app.ws.send(JSON.stringify(data));
 }
 
 App.prototype.receiveMessage = function(msg) {
@@ -33,12 +39,15 @@ App.prototype.receiveMessage = function(msg) {
         break;
       case 'PlayerIdentity':
         app.playerId = data.Message;
+        app.pingTime = new Date().getTime() - app.time;
         break;
       case 'GetGameTypes':
         break;
       case 'GetRoomList':
         app.roomList = data.MessageArray;
         app.toggleJoinRoomModal(app.roomList);
+        break;
+      case 'ChangeNick':
         break;
     }
   } catch(Exception) {

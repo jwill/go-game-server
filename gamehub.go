@@ -84,8 +84,13 @@ func (h *GameHub) handleMessage(msg string) bool {
 		h.rooms[r.roomId] = r
 		fmt.Println(h.getRoomList())
 
-		// message to say room was created
-		// move player to room
+	// message to say room was created
+	// move player to room
+	case "ChangeNick":
+		msg := player.ChangeNick(data.Message)
+		h.sendBroadcastMessage(msg, "Lobby")
+		// Send message to room saying nick has changed
+		handledMessage = true
 	case "JoinRoom":
 		fmt.Println("JoinRoom")
 		// TODO: Check if player is already in game room
@@ -113,6 +118,10 @@ func (h *GameHub) handleMessage(msg string) bool {
 	case "GetGameTypes":
 		conn.send <- h.getGameTypes()
 		handledMessage = true
+	case "GetPlayerList":
+		for _, v := range h.players {
+			fmt.Println(v)
+		}
 	case "GetRoomList":
 		conn.send <- h.getRoomList()
 		handledMessage = true
@@ -120,6 +129,24 @@ func (h *GameHub) handleMessage(msg string) bool {
 
 	fmt.Println(data.Message)
 	return handledMessage
+}
+
+func (h *GameHub) sendBroadcastMessage(msg Message, roomId string) {
+	b, err := rjson.Marshal(msg)
+	if err != nil {
+		return
+	}
+
+	for c := range h.connections {
+		select {
+		case c.send <- string(b):
+		default:
+			delete(h.connections, c)
+			close(c.send)
+			go c.ws.Close()
+		}
+	}
+
 }
 
 func (h *GameHub) getRoomList() string {
