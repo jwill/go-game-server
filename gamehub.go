@@ -132,21 +132,15 @@ func (h *GameHub) handleMessage(msg string) bool {
 }
 
 func (h *GameHub) sendBroadcastMessage(msg Message, roomId string) {
-	b, err := rjson.Marshal(msg)
-	if err != nil {
+	room := h.rooms[roomId]
+	b, err2 := rjson.Marshal(msg)
+	if err2 != nil {
 		return
 	}
 
-	for c := range h.connections {
-		select {
-		case c.send <- string(b):
-		default:
-			delete(h.connections, c)
-			close(c.send)
-			go c.ws.Close()
-		}
+	for k, _ := range room.players {
+		h.players[k].conn.send <- string(b)
 	}
-
 }
 
 func (h *GameHub) getRoomList() string {
@@ -200,9 +194,9 @@ func (h *GameHub) Run() {
 	log.SetDebug(true)
 	log.Info("Started GameHub")
 
-	r := &GameRoom{players: make(map[string]bool)}
-	r.roomId = "DemoRoom"
-	h.rooms[r.roomId] = r
+	lobby := &GameRoom{players: make(map[string]bool)}
+	lobby.roomId = "Lobby"
+	h.rooms[lobby.roomId] = lobby
 	fmt.Println(h.getRoomList())
 
 	//InitTest()
@@ -214,6 +208,7 @@ func (h *GameHub) Run() {
 		case p := <-h.register:
 			h.players[p.id] = p
 			h.connections[p.conn] = true
+			lobby.addPlayer(p)
 			log.Debug("Added Player " + p.id)
 
 		// Player exited website.
