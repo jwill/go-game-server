@@ -1,5 +1,11 @@
 package main
 
+import (
+  "fmt"
+  	"launchpad.net/rjson"
+	"github.com/sqp/godock/libs/log"
+)
+
 type GameRoom struct {
 	players map[string]bool
 	roomId  string
@@ -24,7 +30,7 @@ type QuizBowlGame struct {
 	room *GameRoom
 }
 
-func (quiz *QuizBowlGame) handleGameMessage(msg string) bool {
+func (quiz *QuizBowlGame) handleGameMessage(msg string, h *GameHub) bool {
 	var conn *connection
 	var player *Player
 	var handledMessage bool

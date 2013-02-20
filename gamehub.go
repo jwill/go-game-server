@@ -49,7 +49,6 @@ var gamehub = GameHub{
 	unregister:  make(chan *Player),
 	connections: make(map[*connection]bool),
 	rooms:       make(map[string]*GameRoom),
-	lobby:       *GameRoom,
 }
 
 func (h *GameHub) findConnectionForPlayer(playerId string) *connection {
