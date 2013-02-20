@@ -6,6 +6,8 @@ type GameRoom struct {
 }
 
 type Game interface {
+	handleGameMessage(msg string) bool
+	score()
 }
 
 func (room *GameRoom) addPlayer(player *Player) {
@@ -16,4 +18,42 @@ func (room *GameRoom) addPlayer(player *Player) {
 func (room *GameRoom) removePlayer(player *Player) {
 	delete(room.players, player.id)
 	// Send message saying player was removed
+}
+
+type QuizBowlGame struct {
+	room *GameRoom
+}
+
+func (quiz *QuizBowlGame) handleGameMessage(msg string) bool {
+	var conn *connection
+	var player *Player
+	var handledMessage bool
+
+	var data Message
+	err := rjson.Unmarshal([]byte(msg), &data)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	log.Debug(msg)
+
+	// Get sender's connection
+	sender := data.Sender
+	if sender != "" && sender != "Server" {
+		player = h.players[sender]
+		conn = player.conn
+	}
+
+	switch data.Operation {
+	case "SendAnswer":
+
+	case "StartGame":
+		fmt.Println("StartGame")
+	case "GetRoomList":
+		conn.send <- h.getRoomList()
+		handledMessage = true
+	}
+
+	fmt.Println(data.Message)
+	return handledMessage
 }

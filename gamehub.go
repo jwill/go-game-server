@@ -15,6 +15,7 @@ type Message struct {
 	RoomID       string
 	Message      string
 	MessageArray []string
+	MessageMap   string
 }
 
 type GameHub struct {
@@ -35,6 +36,8 @@ type GameHub struct {
 
 	// Rooms
 	rooms map[string]*GameRoom
+
+  lobby *GameRoom
 }
 
 // singleton
@@ -46,6 +49,7 @@ var gamehub = GameHub{
 	unregister:  make(chan *Player),
 	connections: make(map[*connection]bool),
 	rooms:       make(map[string]*GameRoom),
+	lobby:       *GameRoom,
 }
 
 func (h *GameHub) findConnectionForPlayer(playerId string) *connection {
@@ -189,15 +193,29 @@ func (h *GameHub) createRoom(gameType string, playerId string) {
 	r.players[playerId] = true
 }
 
+func (h *GameHub) createDemoRooms() {
+	h.lobby = &GameRoom{players: make(map[string]bool)}
+	h.lobby.roomId = "Lobby"
+	h.rooms[h.lobby.roomId] = h.lobby
+	fmt.Println(h.getRoomList())
+
+	// QuizBowl Room
+	quizbowl := &GameRoom{players: make(map[string]bool)}
+	quizbowl.roomId = "Lobby"
+	h.rooms[quizbowl.roomId] = quizbowl
+
+	// Racing Room
+	racing := &GameRoom{players: make(map[string]bool)}
+	racing.roomId = "Racing"
+	h.rooms[racing.roomId] = racing
+}
+
 func (h *GameHub) Run() {
 	log.SetPrefix("GameHub")
 	log.SetDebug(true)
 	log.Info("Started GameHub")
 
-	lobby := &GameRoom{players: make(map[string]bool)}
-	lobby.roomId = "Lobby"
-	h.rooms[lobby.roomId] = lobby
-	fmt.Println(h.getRoomList())
+	h.createDemoRooms()
 
 	//InitTest()
 
@@ -208,7 +226,7 @@ func (h *GameHub) Run() {
 		case p := <-h.register:
 			h.players[p.id] = p
 			h.connections[p.conn] = true
-			lobby.addPlayer(p)
+			h.lobby.addPlayer(p)
 			log.Debug("Added Player " + p.id)
 
 		// Player exited website.
