@@ -10,11 +10,12 @@ import (
 type GameRoom struct {
 	players map[string]bool
 	roomId  string
+	game    Game
 }
 
 type Game interface {
-	handleGameMessage(msg string) bool
-	score()
+	init()
+	HandleGameMessage(string, *GameHub) bool
 }
 
 func (room *GameRoom) addPlayer(player *Player) {
@@ -28,9 +29,10 @@ func (room *GameRoom) removePlayer(player *Player) {
 }
 
 type QuizBowlGame struct {
-	room      *GameRoom
 	questions []Question
 }
+
+// Quizbowl Structs
 
 type Question struct {
 	Lang          string
@@ -44,6 +46,16 @@ type Question struct {
 type Choice struct {
 	Id   int
 	Text string
+}
+
+type QuizBowlAnswer struct {
+	RoomId     string
+	QuestionId int
+	AnswerId   int
+}
+
+func (quiz *QuizBowlGame) init() {
+	quiz.loadQuestions()
 }
 
 func (quiz *QuizBowlGame) loadQuestions() {
@@ -63,7 +75,8 @@ func (quiz *QuizBowlGame) loadQuestions() {
 	quiz.questions = questions
 }
 
-func (quiz *QuizBowlGame) handleGameMessage(msg string, h *GameHub) bool {
+func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
+	fmt.Println("in quiz handle message")
 	var conn *connection
 	var player *Player
 	var handledMessage bool
@@ -82,17 +95,31 @@ func (quiz *QuizBowlGame) handleGameMessage(msg string, h *GameHub) bool {
 		player = h.players[sender]
 		conn = player.conn
 	}
+	fmt.Println(conn)
 
 	switch data.Operation {
-	case "SendAnswer":
-
 	case "StartGame":
 		fmt.Println("StartGame")
-	case "GetRoomList":
-		conn.send <- h.getRoomList()
+	case "SendAnswer":
+		quiz.Score(data.MessageMap)
 		handledMessage = true
 	}
 
-	fmt.Println(data.Message)
 	return handledMessage
+}
+
+func (quiz *QuizBowlGame) Score(msg string) {
+
+	var answer QuizBowlAnswer
+	err := rjson.Unmarshal([]byte(msg), &answer)
+	if err != nil {
+		log.Debug("Could not score answer")
+	}
+
+	question := quiz.questions[0]
+	// question := quiz.findQuestionById(answer.QuestionId)
+	correctAnswer := question.CorrectAnswer
+	if answer.AnswerId == correctAnswer {
+		fmt.Println("Correct Answer!")
+	}
 }

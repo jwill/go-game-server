@@ -60,6 +60,14 @@ func (h *GameHub) findConnectionForPlayer(playerId string) *connection {
 	return nil
 }
 
+func (h *GameHub) findRoomById(roomId string) *GameRoom {
+	r := h.rooms[roomId]
+	if r != nil {
+		return r
+	}
+	return nil
+}
+
 func (h *GameHub) handleMessage(msg string) bool {
 	var conn *connection
 	var player *Player
@@ -129,6 +137,16 @@ func (h *GameHub) handleMessage(msg string) bool {
 	case "GetRoomList":
 		conn.send <- h.getRoomList()
 		handledMessage = true
+	default:
+		// Send to specific room for handling
+		fmt.Println("fallthrough")
+		room := h.findRoomById(data.RoomID)
+		if room != nil {
+			fmt.Println(room)
+			if room.game != nil {
+				room.game.HandleGameMessage(msg, h)
+			}
+		}
 	}
 
 	fmt.Println(data.Message)
@@ -196,12 +214,17 @@ func (h *GameHub) createRoom(gameType string, playerId string) {
 func (h *GameHub) createDemoRooms() {
 	h.lobby = &GameRoom{players: make(map[string]bool)}
 	h.lobby.roomId = "Lobby"
+	h.lobby.game = &QuizBowlGame{}
+
 	h.rooms[h.lobby.roomId] = h.lobby
 	fmt.Println(h.getRoomList())
 
 	// QuizBowl Room
 	quizbowl := &GameRoom{players: make(map[string]bool)}
-	quizbowl.roomId = "Lobby"
+	quizbowl.roomId = "QuizBowl"
+	quizbowl.game = &QuizBowlGame{}
+	fmt.Println(quizbowl.game)
+
 	h.rooms[quizbowl.roomId] = quizbowl
 
 	// Racing Room
@@ -257,14 +280,16 @@ func (h *GameHub) Run() {
 // Test Quizbowl
 func (h *GameHub) TestQuiz() {
 	room := h.rooms["QuizBowl"]
-	game := &QuizBowlGame{room: room}
-	game.loadQuestions()
+	fmt.Println(room)
+	g := room.game
+	g.init()
+	fmt.Println(g)
 
 	go func() {
 		time.Sleep(10 * time.Second)
 		log.Debug("After 10 secs")
 
-		q := game.questions[0]
+		q := g.(*QuizBowlGame).questions[0]
 		q.CorrectAnswer = -1
 		b, err := rjson.Marshal(q)
 		if err != nil {
