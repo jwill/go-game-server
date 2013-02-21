@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/sqp/godock/libs/log"
+	"io/ioutil"
 	"launchpad.net/rjson"
 )
 
@@ -27,7 +28,39 @@ func (room *GameRoom) removePlayer(player *Player) {
 }
 
 type QuizBowlGame struct {
-	room *GameRoom
+	room      *GameRoom
+	questions []Question
+}
+
+type Question struct {
+	Lang          string
+	Points        int
+	QuestionId    int
+	QuestionText  string
+	Choices       []Choice
+	CorrectAnswer int
+}
+
+type Choice struct {
+	Id   int
+	Text string
+}
+
+func (quiz *QuizBowlGame) loadQuestions() {
+	bs, err := ioutil.ReadFile("json/sample-questions.json")
+	if err != nil {
+		return
+	}
+
+	questions := make([]Question, 0)
+
+	err = rjson.Unmarshal(bs, &questions)
+	if err != nil {
+		fmt.Println("Error Loading Questions:", err)
+	}
+	log.Debug("Loaded questions")
+
+	quiz.questions = questions
 }
 
 func (quiz *QuizBowlGame) handleGameMessage(msg string, h *GameHub) bool {

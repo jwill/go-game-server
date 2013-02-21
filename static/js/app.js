@@ -2,6 +2,7 @@ var App = function() {
   this.setupClient();
   this.roomID = 'Lobby';
   this.playerId = '';
+  this.currentGame = new Quizbowl(this.ws);
   
   this.setupModals();
  }
@@ -48,6 +49,9 @@ App.prototype.receiveMessage = function(msg) {
         app.toggleJoinRoomModal(app.roomList);
         break;
       case 'ChangeNick':
+        break;
+      default:
+        app.currentGame.handleMessage(data);
         break;
     }
   } catch(Exception) {

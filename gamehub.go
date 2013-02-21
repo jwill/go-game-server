@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/dchest/uniuri"
 	"launchpad.net/rjson"
+	"time"
 )
 
 type Message struct {
@@ -217,6 +218,7 @@ func (h *GameHub) Run() {
 	h.createDemoRooms()
 
 	//InitTest()
+	h.TestQuiz()
 
 	for {
 		select {
@@ -250,6 +252,41 @@ func (h *GameHub) Run() {
 			}
 		}
 	}
+}
+
+// Test Quizbowl
+func (h *GameHub) TestQuiz() {
+	room := h.rooms["QuizBowl"]
+	game := &QuizBowlGame{room: room}
+	game.loadQuestions()
+
+	go func() {
+		time.Sleep(10 * time.Second)
+		log.Debug("After 10 secs")
+
+		q := game.questions[0]
+		q.CorrectAnswer = -1
+		b, err := rjson.Marshal(q)
+		if err != nil {
+			fmt.Println("Dfdfs", err)
+		}
+
+		msg := Message{
+			Operation:  "SendQuestion",
+			Sender:     "Server",
+			RoomID:     "",
+			MessageMap: string(b),
+		}
+
+		c, err2 := rjson.Marshal(msg)
+		if err2 != nil {
+			fmt.Println("@343")
+			fmt.Println(err2)
+		}
+
+		h.broadcast <- string(c)
+
+	}()
 }
 
 //Sample setup of TicTacToe Board and AI
