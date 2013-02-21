@@ -25,7 +25,23 @@
       <div id='playingArea'>
         <canvas id='board'></canvas>
       </div>
-      <div class='span4'>
+      <div id='quizbowlArea' class='span10'>
+        <span id='category'>General Knowledge</span><br/>
+        <span id='secondsLeft'>00 seconds left</span>
+        <p id='questionText'><h3>What famous document begins: "When in the course of human events..."?</h3></p>
+        <div id='answers'>
+          <div class='row'>
+            <button>The Declaration of Independence</button>
+            <button>The Constitution</button>
+          </div>
+          <div class='row'>
+            <button>The Emancipation Proclaimation</button>
+            <button>The Magna Carta</button>
+        </div>
+        </div>
+
+      </div>
+      <div class='span3'>
         <textarea id='chat' rows='20' cols='50'></textarea>
         <br/>
         <input type='text' id='message' columns='40'>

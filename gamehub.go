@@ -37,7 +37,7 @@ type GameHub struct {
 	// Rooms
 	rooms map[string]*GameRoom
 
-  lobby *GameRoom
+	lobby *GameRoom
 }
 
 // singleton

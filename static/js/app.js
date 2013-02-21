@@ -125,6 +125,20 @@ App.prototype.createRoom = function(roomId) {
   app.toggleCreateRoomModal();
 }
 
+App.prototype.createTimer = function(secs) {
+  this.secsRemaining = secs;
+  this.counter = setInterval(this.runTimer, 1000);
+}
+
+App.prototype.runTimer = function() {
+  app.secsRemaining--;
+  if (app.secsRemaining <= 0) {
+    clearInterval(app.counter);
+  }
+
+  $('#secondsLeft').get(0).innerText = app.secsRemaining + " seconds left";
+}
+
 
 App.prototype.getGameTypes = function() {
   var data = {

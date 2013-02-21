@@ -1,9 +1,9 @@
 package main
 
 import (
-  "fmt"
-  	"launchpad.net/rjson"
+	"fmt"
 	"github.com/sqp/godock/libs/log"
+	"launchpad.net/rjson"
 )
 
 type GameRoom struct {
