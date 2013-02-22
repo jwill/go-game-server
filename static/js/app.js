@@ -89,6 +89,7 @@ App.prototype.joinRoom = function() {
   }
   console.log(data);
   app.ws.send(JSON.stringify(data));
+  $('#join-room-modal').modal('toggle');
 }
 
 App.prototype.leaveRoom = function(roomId) {

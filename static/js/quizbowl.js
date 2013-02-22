@@ -19,6 +19,10 @@ Quizbowl.prototype.handleMessage = function(msg) {
   }
 }
 
+Quizbowl.prototype.clearAnswers = function () {
+  
+}
+
 Quizbowl.prototype.randomizeChoices = function() {
   // Not implemented
 }
@@ -28,12 +32,20 @@ Quizbowl.prototype.parseAnswer = function(msg) {
 }
 
 Quizbowl.prototype.displayQuestion = function() {
+
   $('#questionText h3').get(0).innerText = this.currentQuestion.QuestionText;
+  var questionId = this.currentQuestion.QuestionId;
   for (var i=0; i< 4; i++) {
     var choice = this.currentQuestion.Choices[i];
     $('#btn'+i).get(0).value = choice.Id;
     $('#btn'+i).get(0).innerText = choice.Text;
+    $('#btn'+i).unbind('click');
+    $('#btn'+i).click(function(evt) {
+      var target = evt.target.value;
+      app.currentGame.sendAnswer(questionId, target);
+    });
   }
+  app.createTimer(10);
 }
 
 Quizbowl.prototype.sendAnswer = function(questionId, answerId) {

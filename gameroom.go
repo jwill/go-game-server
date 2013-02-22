@@ -37,21 +37,21 @@ type QuizBowlGame struct {
 type Question struct {
 	Lang          string
 	Points        int
-	QuestionId    int
+	QuestionId    string
 	QuestionText  string
 	Choices       []Choice
-	CorrectAnswer int
+	CorrectAnswer string
 }
 
 type Choice struct {
-	Id   int
+	Id   string
 	Text string
 }
 
 type QuizBowlAnswer struct {
 	RoomId     string
-	QuestionId int
-	AnswerId   int
+	QuestionId string
+	AnswerId   string
 }
 
 func (quiz *QuizBowlGame) init() {
@@ -76,7 +76,6 @@ func (quiz *QuizBowlGame) loadQuestions() {
 }
 
 func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
-	fmt.Println("in quiz handle message")
 	var conn *connection
 	var player *Player
 	var handledMessage bool
@@ -86,8 +85,6 @@ func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-
-	log.Debug(msg)
 
 	// Get sender's connection
 	sender := data.Sender
@@ -101,25 +98,65 @@ func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
 	case "StartGame":
 		fmt.Println("StartGame")
 	case "SendAnswer":
-		quiz.Score(data.MessageMap)
+		quiz.Score(data.MessageMap, player)
 		handledMessage = true
 	}
 
 	return handledMessage
 }
 
-func (quiz *QuizBowlGame) Score(msg string) {
+func (quiz *QuizBowlGame) Score(msg string, player *Player) {
+	if player.data == nil {
+		player.data = 0
+	}
 
 	var answer QuizBowlAnswer
 	err := rjson.Unmarshal([]byte(msg), &answer)
 	if err != nil {
+		fmt.Println(err)
 		log.Debug("Could not score answer")
 	}
 
-	question := quiz.questions[0]
-	// question := quiz.findQuestionById(answer.QuestionId)
+	question := quiz.findQuestionById(answer.QuestionId)
+	fmt.Println("Q:", question)
 	correctAnswer := question.CorrectAnswer
+	fmt.Println(correctAnswer, answer.AnswerId)
 	if answer.AnswerId == correctAnswer {
 		fmt.Println("Correct Answer!")
+		player.data = player.data.(int) + 200
+		fmt.Println("Score:", player.data)
+	} else {
+		fmt.Println("Wrong Answer!")
 	}
+
+	//Send message back to player
+}
+
+func (quiz *QuizBowlGame) findQuestionById(questionId string) Question {
+	var q Question
+	for _, qq := range quiz.questions {
+		if questionId == qq.QuestionId {
+			q = qq
+		}
+	}
+	return q
+}
+
+func (quiz *QuizBowlGame) SendQuestion(roomId string, questionId string, h *GameHub) {
+	q := quiz.findQuestionById(questionId)
+	fmt.Println(q)
+	q.CorrectAnswer = "-1"
+	b, err := rjson.Marshal(q)
+	if err != nil {
+		fmt.Println("Dfdfs", err)
+	}
+
+	msg := Message{
+		Operation:  "SendQuestion",
+		Sender:     "Server",
+		RoomID:     "",
+		MessageMap: string(b),
+	}
+
+	h.sendBroadcastMessage(msg, roomId)
 }

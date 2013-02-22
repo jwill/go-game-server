@@ -139,7 +139,6 @@ func (h *GameHub) handleMessage(msg string) bool {
 		handledMessage = true
 	default:
 		// Send to specific room for handling
-		fmt.Println("fallthrough")
 		room := h.findRoomById(data.RoomID)
 		if room != nil {
 			fmt.Println(room)
@@ -217,13 +216,11 @@ func (h *GameHub) createDemoRooms() {
 	h.lobby.game = &QuizBowlGame{}
 
 	h.rooms[h.lobby.roomId] = h.lobby
-	fmt.Println(h.getRoomList())
 
 	// QuizBowl Room
 	quizbowl := &GameRoom{players: make(map[string]bool)}
 	quizbowl.roomId = "QuizBowl"
 	quizbowl.game = &QuizBowlGame{}
-	fmt.Println(quizbowl.game)
 
 	h.rooms[quizbowl.roomId] = quizbowl
 
@@ -280,37 +277,15 @@ func (h *GameHub) Run() {
 // Test Quizbowl
 func (h *GameHub) TestQuiz() {
 	room := h.rooms["QuizBowl"]
-	fmt.Println(room)
 	g := room.game
 	g.init()
-	fmt.Println(g)
 
 	go func() {
-		time.Sleep(10 * time.Second)
-		log.Debug("After 10 secs")
-
-		q := g.(*QuizBowlGame).questions[0]
-		q.CorrectAnswer = -1
-		b, err := rjson.Marshal(q)
-		if err != nil {
-			fmt.Println("Dfdfs", err)
+		quizbowlgame := g.(*QuizBowlGame)
+		for _, q := range quizbowlgame.questions {
+			time.Sleep(15 * time.Second)
+			quizbowlgame.SendQuestion(room.roomId, q.QuestionId, h)
 		}
-
-		msg := Message{
-			Operation:  "SendQuestion",
-			Sender:     "Server",
-			RoomID:     "",
-			MessageMap: string(b),
-		}
-
-		c, err2 := rjson.Marshal(msg)
-		if err2 != nil {
-			fmt.Println("@343")
-			fmt.Println(err2)
-		}
-
-		h.broadcast <- string(c)
-
 	}()
 }
 

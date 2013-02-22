@@ -54,6 +54,7 @@ type Player struct {
 	conn *connection
 	name string
 	id   string
+	data interface{}
 }
 
 func (p *Player) ChangeNick(newNick string) Message {
