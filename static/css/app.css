@@ -1,12 +1,12 @@
 #playingArea {
   height: 100%;
   margin-left: 30px;
-  display: none;
 }
 
 #quizbowlArea {
   margin-left:30px;
   float: left;
+  display: none;
 }
 
 #category {
@@ -32,7 +32,7 @@
   float: left;
   border: 1px;
   border-style: solid;
-  border-color: black;
+  border-color: gray;
 }
 
 #chat {
