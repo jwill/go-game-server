@@ -16,7 +16,7 @@ class App
     
     
     @renderer = new THREE.WebGLRenderer({autoClear:true})
-    #@renderer.setClearColor(new THREE.Color(0x000000))
+    @renderer.setClearColor(new THREE.Color(0x000000))
     @renderer.setSize(width, height)
     
     @camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
