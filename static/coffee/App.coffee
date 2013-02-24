@@ -5,10 +5,10 @@ class App
     
     fov = 45
     aspect = width / height
-    near = 0.1
-    far = 10000
+    near = 1
+    far = 5000
 
-    light = new THREE.DirectionalLight(0xFFFFFF)
+    light = new THREE.AmbientLight(0xFFFFFF)
     
     light.position.x = 10
     light.position.y = 200
@@ -16,12 +16,12 @@ class App
     
     
     @renderer = new THREE.WebGLRenderer({autoClear:true})
-    #@renderer.setClearColor(new THREE.Color(0x000000))
+    @renderer.setClearColor(new THREE.Color(0x000000))
     @renderer.setSize(width, height)
     
     @camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
-    @camera.position.z = 200
-    @camera.target = new THREE.Vector3(0,150,0)
+    @camera.position = new THREE.Vector3(200,100,500)
+    @camera.target = new THREE.Vector3(0,0,0)
     
     @scene = new THREE.Scene()
     @scene.add(light)

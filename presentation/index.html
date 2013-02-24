@@ -14,18 +14,17 @@
 <section class='slides layout-regular'>
 
 <article data-markdown>
-# Getting started with WebGL and Three.js 
+# Creating a HTML5 Game Server with Google Go 
 
-[+James Williams](http://jameswilliams.be/+) [@ecspike](http://twitter.com/ecspike)  
+James Williams
+[http://jameswilliams.be/+](http://jameswilliams.be/+) [@ecspike](http://twitter.com/ecspike)  
 
-TakeOff Conference (Lille, France)  
-January 2013
+February 2013
 </article>
 
 <article data-markdown>
 ### About Me
 
-* Former student at Lille III - Univ. CDG
 * Author of [Learning HTML5 Game Programming](http://amzn.to/HTML5-Game-Book)
 * Writing a new book on Three.js
 </article>
@@ -33,19 +32,192 @@ January 2013
 <article data-markdown>
 ### Agenda
 
-* What is WebGL/Three.js?
-* Creating Meshes
-* Lighting and Shading
+* What is Go?
+* Go objects
+* Concurrency
+* Channels
 * Demos
 </article>
 
 <article data-markdown>
-### What is Three.js?
+### What is Go?
 
-* 3D scenegraph library
-* Abstracts the nastiness away from WebGL
-* Renders to Canvas 2D, WebGL, and CSS3D*
-* Can import models from popular 3D modeling apps
+* Announced in 2009
+* Statically typed general purpose language with a C-like syntax
+* Can use C libraries through an extern interface
+* Compiles on Linux, OSX, various BSDs, Windows and others
+* [http://golang.org](http://golang.org)
+</article>
+
+<article data-markdown>
+### N-factorial in Go
+
+    package main
+
+    import "fmt"
+
+    func fact(n int) int {
+      if n == 1 {
+        return 1
+      }
+      return n * fact(n-1)
+    }
+
+    func main() {
+      fmt.Println("5! =", fact(5))
+    }
+</article>
+
+<article data-markdown>
+### A More Advanced Example
+
+    package main
+
+    import ("os";"fmt";"bufio")
+
+    func main() {
+      var greeting string
+      greeting = "Hi, "
+
+      fmt.Println("What's your name?")
+      input := bufio.NewReader(os.Stdin)
+
+      name, err := input.ReadString('\n')
+      if err != nil {
+        fmt.Println(err)
+      }
+      defer fmt.Println(greeting, name)
+    }
+</article>
+
+<article data-markdown>
+### Go structs
+
+* similar to C-structs
+* declarations are data only
+* can contain other structs
+
+</article>
+
+<article data-markdown>
+### Go Structs
+
+    type connection struct {
+      // Websocket connection
+      ws *websocket.Conn
+
+      // Buffered channel for outbound messages
+      send chan string
+    }
+
+    type Player struct {
+      conn *connection
+      name string
+      id   string
+      data interface{}
+    }
+</article>
+
+<article data-markdown>
+### Interfaces
+
+* Means of providing polymorphism and inheritance qualities to objects
+* Doesn't need an explicit keyword or symbol
+* Can also be used as a placeholder type (like _Object_ in Java)
+</article>
+
+<article data-markdown>
+### Interface Example
+
+<pre>
+package main;import "fmt"
+
+type CanTalk interface{
+  Speak() string
+}
+
+type Human struct {
+  name string
+}
+
+func (h *Human) Speak() string{
+  return "Hi my name is " + h.name
+}
+
+func main() {
+  var x CanTalk
+  x = &Human{name:"John"}
+  fmt.Println(x.Speak())
+}
+    </pre>
+</article>
+
+<article data-markdown>
+### Concurrency in Go
+
+* Goroutines
+* Channels
+</article>
+
+<article data-markdown>
+### Goroutines
+
+* Similar to a lightweight thread\&#42;
+* Multiplexed over many threads to prevent blocking
+* Use channels to communicate
+</article>
+
+<article data-markdown>
+### Channels
+
+* Addresses the producer-consumer problem
+* Can be typed
+* Buffered vs Unbuffered
+</article>
+
+<article data-markdown>
+### Example Goroutine   
+    go func() {
+      quizbowlgame := g.(*QuizBowlGame)
+      for _, q := range quizbowlgame.questions {
+        time.Sleep(15 * time.Second)
+        quizbowlgame.SendQuestion(room.roomId, q.QuestionId, h)
+      }
+    }()
+</article>
+
+<article data-markdown>
+### Advanced Example with Goroutines and Channels
+<pre>
+func wsHandler(ws *websocket.Conn) {
+  player := &Player{id: uniuri.New(), 
+    conn: &connection{send: make(chan string, 256), ws: ws}}
+  
+  gamehub.register <- player
+  gamehub.broadcast <- player.AnnouncePlayer("Lobby", false)
+  player.SendPlayerIdentity()
+  
+  defer func() {
+    gamehub.unregister <- player
+    gamehub.broadcast <- player.AnnouncePlayer("", true)
+  }()
+  
+  go player.conn.writer()
+  
+  player.conn.reader()
+}
+</pre>
+</article>
+
+<article data-markdown>
+### About the Game Server
+
+* Uses WebSockets for communication between client and server
+* WebGL(Three.js) simulation on client
+* Other lower tech POCs
+
+Source code: [http://github.com/jwill/go-game-server](http://github.com/jwill/go-game-server)<br/><br/>
+Live demo: [http://html5ga.me](http://html5ga.me)
 </article>
 
 <article data-markdown>
