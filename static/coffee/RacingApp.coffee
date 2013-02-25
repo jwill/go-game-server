@@ -24,7 +24,7 @@ class RacingApp extends App
     obj.name = 'Car'+carId
     tjs.carsList.push obj
     if (tjs.carsList.length is 12) 
-      // Try to wait until all the async calls are done
+      # Try to wait until all the async calls are done
       setTimeout(tjs.drawScene(), 5000)
     
   drawScene: () ->

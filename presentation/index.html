@@ -16,37 +16,47 @@
 <article data-markdown>
 # Creating a HTML5 Game Server with Google Go 
 
-James Williams
-[http://jameswilliams.be/+](http://jameswilliams.be/+) [@ecspike](http://twitter.com/ecspike)  
+James Williams <br/>
+[http://jameswilliams.be/+](http://jameswilliams.be/+) <br/>
+[@ecspike](http://twitter.com/ecspike)  
 
 February 2013
-</article>
-
-<article data-markdown>
-### About Me
-
-* Author of [Learning HTML5 Game Programming](http://amzn.to/HTML5-Game-Book)
-* Writing a new book on Three.js
-</article>
-
-<article data-markdown>
-### Agenda
-
-* What is Go?
-* Go objects
-* Concurrency
-* Channels
-* Demos
 </article>
 
 <article data-markdown>
 ### What is Go?
 
 * Announced in 2009
-* Statically typed general purpose language with a C-like syntax
-* Can use C libraries through an extern interface
-* Compiles on Linux, OSX, various BSDs, Windows and others
+* Statically typed language with a C-like syntax
+* Pass by value by default
+* Compiles almost everywhere (including Raspberry Pi)
 * [http://golang.org](http://golang.org)
+</article>
+
+<article data-markdown>
+### Why build a game server in Go?
+
+* Wanted to learn Go
+* Ease of concurrency seemed a good fit
+* Sounded like a fun idea
+</article>
+
+<article data-markdown>
+### About the Game Server
+
+* Uses WebSockets for communication between client and server
+* Uses HTML5 and WebGL(Three.js) on client
+
+Source code: [http://github.com/jwill/go-game-server](http://github.com/jwill/go-game-server)<br/><br/>
+Live demo: [http://html5ga.me](http://html5ga.me)
+</article>
+
+<article data-markdown>
+### Game Server Components
+
+* Gamehub
+* Player / Connection
+* Games
 </article>
 
 <article data-markdown>
@@ -69,38 +79,15 @@ February 2013
 </article>
 
 <article data-markdown>
-### A More Advanced Example
-
-    package main
-
-    import ("os";"fmt";"bufio")
-
-    func main() {
-      var greeting string
-      greeting = "Hi, "
-
-      fmt.Println("What's your name?")
-      input := bufio.NewReader(os.Stdin)
-
-      name, err := input.ReadString('\n')
-      if err != nil {
-        fmt.Println(err)
-      }
-      defer fmt.Println(greeting, name)
-    }
-</article>
-
-<article data-markdown>
 ### Go structs
 
-* similar to C-structs
-* declarations are data only
-* can contain other structs
+* a type with named fields
+* fields can be other structs
 
 </article>
 
 <article data-markdown>
-### Go Structs
+### Player / Connection
 
     type connection struct {
       // Websocket connection
@@ -119,66 +106,72 @@ February 2013
 </article>
 
 <article data-markdown>
+### Gamehub
+    type GameHub struct {
+      
+      players map[string]*Player
+
+      connections map[*connection]bool
+
+      broadcast chan string    // Inbound messages from the connections
+
+      register chan *Player    // Register requests from the connections
+
+      unregister chan *Player  // Unregister requests from the connections
+
+      rooms map[string]*GameRoom
+
+      lobby *GameRoom
+    }
+
+</article>
+
+
+
+<article data-markdown>
 ### Interfaces
 
 * Means of providing polymorphism and inheritance qualities to objects
 * Doesn't need an explicit keyword or symbol
-* Can also be used as a placeholder type (like _Object_ in Java)
 </article>
 
 <article data-markdown>
 ### Interface Example
 
-<pre>
-package main;import "fmt"
+    type Game interface {
+      init()
+      HandleGameMessage(string, *GameHub) bool
+    }
 
-type CanTalk interface{
-  Speak() string
-}
+    type QuizBowlGame struct {
+      questions []Question
+    }
+    
+    func (quiz *QuizBowlGame) init() {
+      quiz.loadQuestions()
+    }
 
-type Human struct {
-  name string
-}
-
-func (h *Human) Speak() string{
-  return "Hi my name is " + h.name
-}
-
-func main() {
-  var x CanTalk
-  x = &Human{name:"John"}
-  fmt.Println(x.Speak())
-}
-    </pre>
-</article>
-
-<article data-markdown>
-### Concurrency in Go
-
-* Goroutines
-* Channels
+    func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
+      // function truncated
+    } 
 </article>
 
 <article data-markdown>
 ### Goroutines
 
-* Similar to a lightweight thread\&#42;
-* Multiplexed over many threads to prevent blocking
+* Similar to a lightweight thread
 * Use channels to communicate
 </article>
 
-<article data-markdown>
-### Channels
-
-* Addresses the producer-consumer problem
-* Can be typed
-* Buffered vs Unbuffered
-</article>
 
 <article data-markdown>
 ### Example Goroutine   
     go func() {
+
+      // Cast game object to QuizBowlGame
       quizbowlgame := g.(*QuizBowlGame)
+
+      // Iterate list of questions
       for _, q := range quizbowlgame.questions {
         time.Sleep(15 * time.Second)
         quizbowlgame.SendQuestion(room.roomId, q.QuestionId, h)
@@ -187,38 +180,37 @@ func main() {
 </article>
 
 <article data-markdown>
-### Advanced Example with Goroutines and Channels
+### Channels
+
+* Allow goroutines to communicate and synchronize
+* Buffered vs Unbuffered
+</article>
+
+<article data-markdown>
+### Goroutines and Channels
 <pre>
-func wsHandler(ws *websocket.Conn) {
-  player := &Player{id: uniuri.New(), 
-    conn: &connection{send: make(chan string, 256), ws: ws}}
-  
-  gamehub.register <- player
-  gamehub.broadcast <- player.AnnouncePlayer("Lobby", false)
-  player.SendPlayerIdentity()
-  
-  defer func() {
-    gamehub.unregister <- player
-    gamehub.broadcast <- player.AnnouncePlayer("", true)
-  }()
-  
-  go player.conn.writer()
-  
-  player.conn.reader()
+type Message struct {
+  Operation    string
+  Sender       string
+  RoomID       string
+  Message      string
+}
+
+func (p *Player) SendPlayerIdentity() {
+  msg := Message{
+    Operation: "PlayerIdentity",
+    Sender:    "Server",
+    RoomID:    "Lobby",
+    Message:   p.id,
+  }
+  b, err := rjson.Marshal(msg)
+  if err != nil {
+  }
+  p.conn.send &lt;- string(b)
 }
 </pre>
 </article>
 
-<article data-markdown>
-### About the Game Server
-
-* Uses WebSockets for communication between client and server
-* WebGL(Three.js) simulation on client
-* Other lower tech POCs
-
-Source code: [http://github.com/jwill/go-game-server](http://github.com/jwill/go-game-server)<br/><br/>
-Live demo: [http://html5ga.me](http://html5ga.me)
-</article>
 
 <article data-markdown>
 # Demos
