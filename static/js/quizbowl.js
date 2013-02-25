@@ -5,7 +5,8 @@ var Quizbowl = function(ws) {
 }
 
 Quizbowl.prototype.setupDisplay = function() {
-
+  $('#quizbowlArea').get(0).style.display = 'block';
+  $('#playingArea').get(0).style.display = 'none';
 }
 
 Quizbowl.prototype.handleMessage = function(msg) {

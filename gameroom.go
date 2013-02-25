@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+  "time"
 	"github.com/sqp/godock/libs/log"
 	"io/ioutil"
 	"launchpad.net/rjson"
@@ -56,6 +57,15 @@ type QuizBowlAnswer struct {
 
 func (quiz *QuizBowlGame) init() {
 	quiz.loadQuestions()
+}
+
+func (quiz *QuizBowlGame) startGame(room *GameRoom, h *GameHub) {
+	go func() {
+		for _, q := range quiz.questions {
+			time.Sleep(15 * time.Second)
+			quiz.SendQuestion(room.roomId, q.QuestionId, h)
+		}
+	}()
 }
 
 func (quiz *QuizBowlGame) loadQuestions() {

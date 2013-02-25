@@ -7,6 +7,7 @@ class RacingApp extends App
     @carsList = []
     loader = new THREE.JSONLoader()
     @loadCars()
+    @setupKeys()
     #@drawScene()
 
   loadCars: () ->
@@ -38,6 +39,27 @@ class RacingApp extends App
     @car.position.y = 50
     @scene.add(@car)
     window.animate()
+
+  handleMovement: (obj, velocity) ->
+
+  # maybe use WASD instead to avoid possible scrolling ??
+  setupKeys: () ->
+    @k.down('up', () ->
+      console.log 'pressing up')
+    @k.up('up', () ->
+      console.log 'released up')
+    @k.down('down', () ->
+      console.log 'pressing down')
+    @k.up('down', () ->
+      console.log 'released down')
+    @k.down('left', () ->
+      console.log 'pressing left')
+    @k.up('left', () ->
+      console.log 'released left')
+    @k.down('right', () ->
+      console.log 'pressing right')
+    @k.up('right', () ->
+      console.log 'released right')
 
 window.RacingApp = RacingApp
 

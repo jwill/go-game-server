@@ -14,6 +14,7 @@ class App
     light.position.y = 200
     light.position.z = 130
     
+    @k = new Kibo()
     
     @renderer = new THREE.WebGLRenderer({autoClear:true})
     @renderer.setClearColor(new THREE.Color(0x000000))
@@ -26,6 +27,8 @@ class App
     @scene = new THREE.Scene()
     @scene.add(light)
     
+    $('#quizbowlArea').get(0).style.display = 'none'
+    $('#playingArea').get(0).style.display = 'block'
     $('#board').empty()
     $("#board").get(0).appendChild(@renderer.domElement)
     
