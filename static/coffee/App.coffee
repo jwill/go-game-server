@@ -15,6 +15,7 @@ class App
     light.position.z = 130
     
     @k = new Kibo()
+    @yAxis = new THREE.Vector3(0,1,0)
     
     @renderer = new THREE.WebGLRenderer({autoClear:true})
     @renderer.setClearColor(new THREE.Color(0x000000))

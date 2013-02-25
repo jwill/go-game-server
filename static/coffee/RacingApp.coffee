@@ -5,6 +5,13 @@ class RacingApp extends App
 
   init: () ->
     @carsList = []
+    @maxVelocity = 5
+    @minVelocity = -5
+    @minRotation = -90
+    @maxRotation = 90
+    @currentRotation = 0
+    @currentVelocity = 0
+    @interval = 0.5
     loader = new THREE.JSONLoader()
     @loadCars()
     @setupKeys()
@@ -29,7 +36,6 @@ class RacingApp extends App
       setTimeout(tjs.drawScene(), 5000)
     
   drawScene: () ->
-    
     @planeMesh = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshBasicMaterial({color: 0x085A14}))
     @planeMesh.rotation.x = -1.57
     @planeMesh.scale.set(20,20,20)
@@ -40,26 +46,61 @@ class RacingApp extends App
     @scene.add(@car)
     window.animate()
 
-  handleMovement: (obj, velocity) ->
+  render: () ->
+    @updateObjects()
+    super()
 
-  # maybe use WASD instead to avoid possible scrolling ??
+  updateObjects: () ->
+    @car.position.z += @currentVelocity
+    @rotateAroundObjectAxis(@car, @yAxis, @currentRotation / 180 * Math.PI)
+    #@car.rotation.y += @currentRotation
+
+  handleInput: (direction) ->
+    if direction is 'up'
+      @increment('x')
+    else if direction is 'down'
+      @decrement('x')
+    else if direction is 'left'
+      @increment('z')
+    else @decrement('z')
+
+  increment: (axis) ->
+    if axis is 'z'
+      if (@currentRotation + @interval) < @maxRotation
+        @currentRotation += @interval
+    if axis is 'x'
+      if (@currentVelocity + @interval) < @maxVelocity
+        @currentVelocity += @interval
+
+  decrement: (axis) ->
+    if axis is 'z'
+      if (@currentRotation - @interval) < @maxRotation
+        @currentRotation -= @interval
+    if axis is 'x'
+      if (@currentVelocity - @interval) < @maxVelocity
+        @currentVelocity -= @interval
+
+  rotateAroundObjectAxis: (object, axis, radians) ->
+    rotObjectMatrix = new THREE.Matrix4()
+    rotObjectMatrix.makeRotationAxis(axis.normalize(), radians)
+    object.matrix.multiply(rotObjectMatrix)
+    object.matrix = rotObjectMatrix
+    object.rotation.setEulerFromRotationMatrix(object.matrix)
+
   setupKeys: () ->
-    @k.down('up', () ->
-      console.log 'pressing up')
-    @k.up('up', () ->
-      console.log 'released up')
-    @k.down('down', () ->
-      console.log 'pressing down')
-    @k.up('down', () ->
-      console.log 'released down')
-    @k.down('left', () ->
-      console.log 'pressing left')
-    @k.up('left', () ->
-      console.log 'released left')
-    @k.down('right', () ->
-      console.log 'pressing right')
-    @k.up('right', () ->
-      console.log 'released right')
+    self = this
+    @k.down('w', () ->
+      self.handleInput('up'))
+    @k.up('w', () -> )
+    @k.down('s', () ->
+      self.handleInput('down'))
+    @k.up('s', () -> )
+    @k.down('a', () ->
+      self.handleInput('left'))
+    @k.up('a', () -> )
+    @k.down('d', () ->
+      self.handleInput('right'))
+    @k.up('d', () -> )
 
 window.RacingApp = RacingApp
 
