@@ -42,16 +42,6 @@ February 2013
 </article>
 
 <article data-markdown>
-### About the Game Server
-
-* Uses WebSockets for communication between client and server
-* Uses HTML5 and WebGL(Three.js) on client
-
-Source code: [http://github.com/jwill/go-game-server](http://github.com/jwill/go-game-server)<br/><br/>
-Live demo: [http://html5ga.me](http://html5ga.me)
-</article>
-
-<article data-markdown>
 ### Game Server Components
 
 * Gamehub
@@ -167,15 +157,11 @@ Live demo: [http://html5ga.me](http://html5ga.me)
 <article data-markdown>
 ### Example Goroutine   
     go func() {
-
-      // Cast game object to QuizBowlGame
-      quizbowlgame := g.(*QuizBowlGame)
-
-      // Iterate list of questions
-      for _, q := range quizbowlgame.questions {
+      for _, q := range quiz.questions {
         time.Sleep(15 * time.Second)
-        quizbowlgame.SendQuestion(room.roomId, q.QuestionId, h)
+        quiz.SendQuestion(room.roomId, q.QuestionId, h)
       }
+      quiz.gameStarted = false
     }()
 </article>
 
