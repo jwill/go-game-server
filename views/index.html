@@ -24,8 +24,9 @@
         <a class='brand' href='#'>Game Server</a>
         <ul class='nav'>
           <li><a id='roomName' href='#'></a></li>
-          <li><a href='javascript:app.toggleCreateRoomModal()'>Create A Room</a></li>
+          <!--li><a href='javascript:app.toggleCreateRoomModal()'>Create A Room</a></li-->
           <li><a href='javascript:app.getRooms()'>Join A Room</a></li>
+          <li><a href='javascript:app.startGame()'>StartGame</a></li>
         </ul>
       </div>
     </div>
@@ -34,8 +35,8 @@
         <div id='board'></div>
       </div>
       <div id='quizbowlArea' class='span10'>
-        <span id='category'>General Knowledge</span><br/>
         <span id='secondsLeft'>00 seconds left</span>
+        <!--span id='currentScore'>Current Score: </span-->
         <div id='questionText'><h3></h3></div>
         <div id='answers'>
           <div class='row'>

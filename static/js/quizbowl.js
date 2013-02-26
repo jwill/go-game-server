@@ -15,13 +15,19 @@ Quizbowl.prototype.handleMessage = function(msg) {
       this.currentQuestion = JSON.parse(msg.MessageMap);
       this.displayQuestion();
       break;
-    case 'ReceiveAnswer':
+    case 'SendResult':
       this.parseAnswer(msg);
+      break;
   }
 }
 
 Quizbowl.prototype.clearAnswers = function () {
-  
+  for (var i=0; i< 4; i++) {
+    var choice = this.currentQuestion.Choices[i];
+    $('#btn'+i).get(0).value = "";
+    $('#btn'+i).get(0).innerText = "";
+    $('#btn'+i).unbind('click');
+  }
 }
 
 Quizbowl.prototype.randomizeChoices = function() {
@@ -29,7 +35,7 @@ Quizbowl.prototype.randomizeChoices = function() {
 }
 
 Quizbowl.prototype.parseAnswer = function(msg) {
-
+  alert(msg.Message);
 }
 
 Quizbowl.prototype.displayQuestion = function() {
@@ -63,9 +69,5 @@ Quizbowl.prototype.sendAnswer = function(questionId, answerId) {
     MessageMap:JSON.stringify(answer)
   }
   app.ws.send(JSON.stringify(data));
-
-}
-
-Quizbowl.prototype.sendMessage = function(msg) {
-
+  app.currentGame.clearAnswers();
 }

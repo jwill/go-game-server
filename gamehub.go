@@ -1,13 +1,10 @@
 package main
 
 import (
-	//"code.google.com/p/go.net/websocket"
-	"github.com/sqp/godock/libs/log"
-	//"github.com/vmihailenco/msgpack"
 	"fmt"
 	"github.com/dchest/uniuri"
+	"github.com/sqp/godock/libs/log"
 	"launchpad.net/rjson"
-	"time"
 )
 
 type Message struct {
@@ -126,7 +123,9 @@ func (h *GameHub) handleMessage(msg string) bool {
 		}
 
 	case "StartGame":
-		fmt.Println("StartGame")
+		roomId := data.RoomID
+		room := h.rooms[roomId]
+		room.game.startGame(room, h)
 	case "GetGameTypes":
 		conn.send <- h.getGameTypes()
 		handledMessage = true
@@ -213,7 +212,7 @@ func (h *GameHub) createRoom(gameType string, playerId string) {
 func (h *GameHub) createDemoRooms() {
 	h.lobby = &GameRoom{players: make(map[string]bool)}
 	h.lobby.roomId = "Lobby"
-	h.lobby.game = &QuizBowlGame{}
+	h.lobby.game = nil
 
 	h.rooms[h.lobby.roomId] = h.lobby
 
@@ -221,6 +220,7 @@ func (h *GameHub) createDemoRooms() {
 	quizbowl := &GameRoom{players: make(map[string]bool)}
 	quizbowl.roomId = "QuizBowl"
 	quizbowl.game = &QuizBowlGame{}
+	quizbowl.game.init()
 
 	h.rooms[quizbowl.roomId] = quizbowl
 
@@ -276,17 +276,17 @@ func (h *GameHub) Run() {
 
 // Test Quizbowl
 func (h *GameHub) TestQuiz() {
-	room := h.rooms["QuizBowl"]
-	g := room.game
-	g.init()
+	/*	room := h.rooms["QuizBowl"]
+		g := room.game
+		g.init()
 
-	go func() {
-		quizbowlgame := g.(*QuizBowlGame)
-		for _, q := range quizbowlgame.questions {
-			time.Sleep(15 * time.Second)
-			quizbowlgame.SendQuestion(room.roomId, q.QuestionId, h)
-		}
-	}()
+		go func() {
+			quizbowlgame := g.(*QuizBowlGame)
+			for _, q := range quizbowlgame.questions {
+				time.Sleep(15 * time.Second)
+				quizbowlgame.SendQuestion(room.roomId, q.QuestionId, h)
+			}
+		}()*/
 }
 
 //Sample setup of TicTacToe Board and AI

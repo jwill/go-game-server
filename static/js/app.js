@@ -2,7 +2,7 @@ var App = function() {
   this.setupClient();
   this.roomID = 'Lobby';
   this.playerId = '';
-  this.currentGame = new Quizbowl(this.ws);
+  this.currentGame = null;
   
   this.setupModals();
  }
@@ -89,6 +89,13 @@ App.prototype.joinRoom = function() {
   }
   console.log(data);
   app.ws.send(JSON.stringify(data));
+
+  // Make less conference codey later
+  app.roomID = roomId;
+  if (roomId == "QuizBowl") {
+    app.currentGame = new Quizbowl(app.ws);
+  }
+
   $('#join-room-modal').modal('toggle');
 }
 
@@ -151,6 +158,16 @@ App.prototype.getGameTypes = function() {
     Sender: app.playerId
   }
   app.ws.send(JSON.stringify(data));
+}
+
+App.prototype.startGame = function() {
+  if (this.currentGame != null) {
+    var data = {
+      Operation: 'StartGame',
+      RoomID: app.roomID
+    }
+    app.ws.send(JSON.stringify(data));
+  }
 }
 
 App.prototype.displayChatMessage = function(sender, messageText) {

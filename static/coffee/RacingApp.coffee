@@ -12,6 +12,7 @@ class RacingApp extends App
     @currentRotation = 0
     @currentVelocity = 0
     @interval = 0.5
+    @forwardVector = new THREE.Vector3(0,0,1)
     loader = new THREE.JSONLoader()
     @loadCars()
     @setupKeys()
@@ -86,6 +87,9 @@ class RacingApp extends App
     object.matrix.multiply(rotObjectMatrix)
     object.matrix = rotObjectMatrix
     object.rotation.setEulerFromRotationMatrix(object.matrix)
+
+  calculateForwardMotion: (object, forward, radians) ->
+    #forwardMatrix = new THREE.Matrix4().identity()
 
   setupKeys: () ->
     self = this

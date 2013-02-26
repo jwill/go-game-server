@@ -5,11 +5,13 @@ import (
 	"github.com/sqp/godock/libs/log"
 	"io/ioutil"
 	"launchpad.net/rjson"
+	"strconv"
 	"time"
 )
 
 type QuizBowlGame struct {
-	questions []Question
+	questions   []Question
+	gameStarted bool
 }
 
 // Quizbowl Structs
@@ -39,12 +41,16 @@ func (quiz *QuizBowlGame) init() {
 }
 
 func (quiz *QuizBowlGame) startGame(room *GameRoom, h *GameHub) {
-	go func() {
-		for _, q := range quiz.questions {
-			time.Sleep(15 * time.Second)
-			quiz.SendQuestion(room.roomId, q.QuestionId, h)
-		}
-	}()
+	if quiz.gameStarted == false {
+		quiz.gameStarted = true
+		go func() {
+			for _, q := range quiz.questions {
+				time.Sleep(15 * time.Second)
+				quiz.SendQuestion(room.roomId, q.QuestionId, h)
+			}
+			quiz.gameStarted = false
+		}()
+	}
 }
 
 func (quiz *QuizBowlGame) loadQuestions() {
@@ -84,8 +90,6 @@ func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
 	fmt.Println(conn)
 
 	switch data.Operation {
-	case "StartGame":
-		fmt.Println("StartGame")
 	case "SendAnswer":
 		quiz.Score(data.MessageMap, player)
 		handledMessage = true
@@ -106,19 +110,34 @@ func (quiz *QuizBowlGame) Score(msg string, player *Player) {
 		log.Debug("Could not score answer")
 	}
 
+	var m string
 	question := quiz.findQuestionById(answer.QuestionId)
-	fmt.Println("Q:", question)
 	correctAnswer := question.CorrectAnswer
+	answerText := quiz.findAnswerText(question, correctAnswer)
+	fmt.Println(answerText)
 	fmt.Println(correctAnswer, answer.AnswerId)
 	if answer.AnswerId == correctAnswer {
-		fmt.Println("Correct Answer!")
 		player.data = player.data.(int) + 200
 		fmt.Println("Score:", player.data)
+		m = "Correct Answer! \nCurrent Score: " + strconv.Itoa(player.data.(int))
 	} else {
-		fmt.Println("Wrong Answer!")
+		m = "Wrong! The correct answer is " + answerText + "\n Current score: " + strconv.Itoa(player.data.(int))
 	}
 
+	msg2 := Message{
+		Operation: "SendResult",
+		Sender:    "Server",
+		RoomID:    "",
+		Message:   m,
+	}
+
+	b, err2 := rjson.Marshal(msg2)
+	if err2 != nil {
+		log.Debug("There was a marshalling error.")
+		return
+	}
 	//Send message back to player
+	player.conn.send <- string(b)
 }
 
 func (quiz *QuizBowlGame) findQuestionById(questionId string) Question {
@@ -129,6 +148,16 @@ func (quiz *QuizBowlGame) findQuestionById(questionId string) Question {
 		}
 	}
 	return q
+}
+
+func (quiz *QuizBowlGame) findAnswerText(q Question, answerId string) string {
+	var answerText string
+	for _, v := range q.Choices {
+		if answerId == v.Id {
+			answerText = v.Text
+		}
+	}
+	return answerText
 }
 
 func (quiz *QuizBowlGame) SendQuestion(roomId string, questionId string, h *GameHub) {
