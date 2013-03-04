@@ -13,6 +13,7 @@ class RacingApp extends App
     @currentVelocity = 0
     @interval = 0.5
     @forwardVector = new THREE.Vector3(0,0,1)
+
     loader = new THREE.JSONLoader()
     @loadCars()
     @setupKeys()
@@ -52,9 +53,7 @@ class RacingApp extends App
     super()
 
   updateObjects: () ->
-    @car.position.z += @currentVelocity
-    @rotateAroundObjectAxis(@car, @yAxis, @currentRotation / 180 * Math.PI)
-    #@car.rotation.y += @currentRotation
+    @rotateAroundObjectAxisAndMove(@car, @yAxis, @currentRotation / 180 * Math.PI, @currentVelocity)
 
   handleInput: (direction) ->
     if direction is 'up'
@@ -63,7 +62,8 @@ class RacingApp extends App
       @decrement('x')
     else if direction is 'left'
       @increment('z')
-    else @decrement('z')
+    else if direction is 'right'
+      @decrement('z')
 
   increment: (axis) ->
     if axis is 'z'
@@ -75,36 +75,38 @@ class RacingApp extends App
 
   decrement: (axis) ->
     if axis is 'z'
-      if (@currentRotation - @interval) < @maxRotation
+      if (@currentRotation - @interval) > @minRotation
         @currentRotation -= @interval
     if axis is 'x'
-      if (@currentVelocity - @interval) < @maxVelocity
+      if (@currentVelocity - @interval) > @minVelocity
         @currentVelocity -= @interval
 
-  rotateAroundObjectAxis: (object, axis, radians) ->
+  rotateAroundObjectAxisAndMove: (object, axis, radians, velocity) ->
     rotObjectMatrix = new THREE.Matrix4()
     rotObjectMatrix.makeRotationAxis(axis.normalize(), radians)
     object.matrix.multiply(rotObjectMatrix)
     object.matrix = rotObjectMatrix
     object.rotation.setEulerFromRotationMatrix(object.matrix)
-
-  calculateForwardMotion: (object, forward, radians) ->
-    #forwardMatrix = new THREE.Matrix4().identity()
+    # calcuate forward motion based on rotation vector
+    x = Math.sin(radians) * velocity
+    z = Math.cos(radians) * velocity
+    object.position.z += z
+    object.position.x += x
 
   setupKeys: () ->
     self = this
     @k.down('w', () ->
       self.handleInput('up'))
-    @k.up('w', () -> )
+    @k.up('w', () -> @currentVelocity = 0)
     @k.down('s', () ->
       self.handleInput('down'))
-    @k.up('s', () -> )
-    @k.down('a', () ->
+    @k.up('s', () -> @currentVelocity = 0)
+    @k.down('left', () ->
       self.handleInput('left'))
-    @k.up('a', () -> )
-    @k.down('d', () ->
+    @k.up('left', () -> )
+    @k.down('right', () ->
       self.handleInput('right'))
-    @k.up('d', () -> )
+    @k.up('right', () -> )
 
 window.RacingApp = RacingApp
 
