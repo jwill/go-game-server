@@ -12,7 +12,7 @@ class RacingApp extends App
     @currentRotation = 0
     @currentVelocity = 0
     @interval = 0.5
-    @forwardVector = new THREE.Vector3(0,0,1)
+    @worldBounds = null
 
     loader = new THREE.JSONLoader()
     @loadCars()
@@ -23,9 +23,17 @@ class RacingApp extends App
     loader = new THREE.JSONLoader()
     for i in [1..12]
       loader.load('/public/assets/cars_pack/Car'+i+'.js', @geom, '/public/assets/cars_pack')
+      loader.load('/public/assets/urban_road/level2.js', @handleRoadGeom, '/public/assets/urban_road')
       #@drawScene()
       
     
+  handleRoadGeom: (g, m) ->
+    self = this
+    tjs.road = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m))
+    #tjs.scene.add(tjs.road)
+    tjs.road.scale.x = 8
+    tjs.road.scale.z = 8
+
   geom: (g, m) ->
     self = this
     obj = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m))
@@ -46,7 +54,15 @@ class RacingApp extends App
     @car = @carsList[0].clone()
     @car.position.y = 50
     @scene.add(@car)
+    @createCameraForCar(@car)
     window.animate()
+
+  createCameraForCar: (car) ->
+    @carCamera = new THREE.PerspectiveCamera(60, 3/2, 1, 2000)
+    @carCamera.position = new THREE.Vector3(car.position.x, car.position.y + 5, car.position.z - 10)
+    @carCamera.target = new THREE.Vector3(car.position.x,car.position.y,car.position.z)
+    @scene.add(@carCamera)
+
 
   render: () ->
     @updateObjects()
@@ -54,6 +70,7 @@ class RacingApp extends App
 
   updateObjects: () ->
     @rotateAroundObjectAxisAndMove(@car, @yAxis, @currentRotation / 180 * Math.PI, @currentVelocity)
+    @rotateAroundObjectAxisAndMove(@carCamera, @yAxis, @currentRotation / 180 * Math.PI, @currentVelocity)
 
   handleInput: (direction) ->
     if direction is 'up'

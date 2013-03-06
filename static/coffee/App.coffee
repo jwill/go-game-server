@@ -22,21 +22,22 @@ class App
     @renderer.setSize(width, height)
     
     @camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
-    @camera.position = new THREE.Vector3(200,100,500)
+    @camera.position = new THREE.Vector3(200,100,1225)
     @camera.target = new THREE.Vector3(0,0,0)
     
     @scene = new THREE.Scene()
     @scene.add(light)
-    
+
     $('#quizbowlArea').get(0).style.display = 'none'
     $('#playingArea').get(0).style.display = 'block'
     $('#board').empty()
     $("#board").get(0).appendChild(@renderer.domElement)
     
     @scene.add(@camera)
+    @currentCamera = @camera
     
   render: () ->
-    @renderer.render(@scene, @camera)
+    @renderer.render(@scene, @currentCamera)
 
   started: () ->
     @started = true
