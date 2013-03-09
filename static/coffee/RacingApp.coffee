@@ -124,6 +124,13 @@ class RacingApp extends App
     @k.down('right', () ->
       self.handleInput('right'))
     @k.up('right', () -> )
+    @k.down('p', () -> 
+      self.toggleCamera())
+
+  toggleCamera: () ->
+    if @currentCamera is @camera
+      @currentCamera = @carCamera
+    else @currentCamera = @camera
 
 window.RacingApp = RacingApp
 
