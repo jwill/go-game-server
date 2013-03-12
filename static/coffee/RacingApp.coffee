@@ -1,6 +1,14 @@
 class RacingApp extends App
   constructor: () ->
     super()
+
+    # setup Physijs
+    Physijs.scripts.worker = 'public/js/physijs_worker.js'
+    Physijs.scripts.ammo = 'ammo.js'
+
+    @scene = new Physijs.Scene()
+    @scene.add(@camera)
+    @currentCamera = @camera
     @init()
 
   init: () ->
@@ -17,28 +25,25 @@ class RacingApp extends App
     loader = new THREE.JSONLoader()
     @loadCars()
     @setupKeys()
-    #@drawScene()
 
   loadCars: () ->
     loader = new THREE.JSONLoader()
     for i in [1..12]
       loader.load('/public/assets/cars_pack/Car'+i+'.js', @geom, '/public/assets/cars_pack')
       loader.load('/public/assets/urban_road/level2.js', @handleRoadGeom, '/public/assets/urban_road')
-      #@drawScene()
       
     
   handleRoadGeom: (g, m) ->
     self = this
-    tjs.road = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m))
-    #tjs.scene.add(tjs.road)
-    tjs.road.scale.x = 8
-    tjs.road.scale.z = 8
+    tjs.road = new Physijs.ConcaveMesh(g, new THREE.MeshFaceMaterial(m),0)
+    tjs.road.position.set(0,0,0)
+    tjs.road.scale.set(8,1,8)
+    tjs.scene.add(tjs.road)
 
   geom: (g, m) ->
     self = this
     obj = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m))
     carId = m[0].name.substring(0,2)
-    obj.scale.set(6, 6, 6)
     obj.name = 'Car'+carId
     tjs.carsList.push obj
     if (tjs.carsList.length is 12) 
@@ -46,13 +51,18 @@ class RacingApp extends App
       setTimeout(tjs.drawScene(), 5000)
     
   drawScene: () ->
-    @planeMesh = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshBasicMaterial({color: 0x085A14}))
-    @planeMesh.rotation.x = -1.57
-    @planeMesh.scale.set(20,20,20)
+    
+    @planeMesh = new Physijs.BoxMesh(new THREE.CubeGeometry(100,1,100), new THREE.MeshBasicMaterial({color: 0x085A14}), 0)
+    @planeMesh.scale.set(20,0.01,20)
+    @planeMesh.position.set(0,0,0)
     @scene.add(@planeMesh)
 
-    @car = @carsList[0].clone()
-    @car.position.y = 50
+    
+    @carClone = @carsList[0].clone()
+    @car = new Physijs.ConcaveMesh(@carClone.geometry, @carClone.material)
+    console.log @car
+    @car.position.set(0, 200, 0)
+    @car.scale.set(10,10,10)
     @scene.add(@car)
     @createCameraForCar(@car)
     window.animate()
@@ -62,7 +72,6 @@ class RacingApp extends App
     @carCamera.position = new THREE.Vector3(car.position.x, car.position.y + 5, car.position.z - 10)
     @carCamera.target = new THREE.Vector3(car.position.x,car.position.y,car.position.z)
     @scene.add(@carCamera)
-
 
   render: () ->
     @updateObjects()
@@ -131,6 +140,10 @@ class RacingApp extends App
     if @currentCamera is @camera
       @currentCamera = @carCamera
     else @currentCamera = @camera
+
+  render: () ->
+    @scene.simulate()
+    @renderer.render(@scene, @currentCamera)
 
 window.RacingApp = RacingApp
 
