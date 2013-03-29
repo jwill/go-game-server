@@ -1,17 +1,11 @@
 class RacingApp extends App
-  constructor: () ->
+  constructor: (ws) ->
     super()
-
-    # setup Physijs
-    Physijs.scripts.worker = 'public/js/physijs_worker.js'
-    Physijs.scripts.ammo = 'ammo.js'
-
-    @scene = new Physijs.Scene()
-    @scene.add(@camera)
-    @currentCamera = @camera
+    @ws = ws
     @init()
 
   init: () ->
+    @playersList = {}
     @carsList = []
     @maxVelocity = 5
     @minVelocity = -5
@@ -30,12 +24,12 @@ class RacingApp extends App
     loader = new THREE.JSONLoader()
     for i in [1..12]
       loader.load('/public/assets/cars_pack/Car'+i+'.js', @geom, '/public/assets/cars_pack')
-      loader.load('/public/assets/urban_road/level2.js', @handleRoadGeom, '/public/assets/urban_road')
+      #loader.load('/public/assets/urban_road/level2.js', @handleRoadGeom, '/public/assets/urban_road')
       
     
   handleRoadGeom: (g, m) ->
     self = this
-    tjs.road = new Physijs.ConcaveMesh(g, new THREE.MeshFaceMaterial(m),0)
+    tjs.road = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m),0)
     tjs.road.position.set(0,0,0)
     tjs.road.scale.set(8,1,8)
     tjs.scene.add(tjs.road)
@@ -52,16 +46,16 @@ class RacingApp extends App
     
   drawScene: () ->
     
-    @planeMesh = new Physijs.BoxMesh(new THREE.CubeGeometry(100,1,100), new THREE.MeshBasicMaterial({color: 0x085A14}), 0)
+    @planeMesh = new THREE.Mesh(new THREE.CubeGeometry(100,1,100), new THREE.MeshBasicMaterial({color: 0x085A14}), 0)
     @planeMesh.scale.set(20,0.01,20)
     @planeMesh.position.set(0,0,0)
     @scene.add(@planeMesh)
 
     
     @carClone = @carsList[0].clone()
-    @car = new Physijs.ConcaveMesh(@carClone.geometry, @carClone.material)
-    console.log @car
-    @car.position.set(0, 200, 0)
+    @car = new THREE.Mesh(@carClone.geometry, @carClone.material)
+    @car.name = @carsList[0].name
+    @car.position.set(0, 20, 0)
     @car.scale.set(10,10,10)
     @scene.add(@car)
     @createCameraForCar(@car)
@@ -141,9 +135,39 @@ class RacingApp extends App
       @currentCamera = @carCamera
     else @currentCamera = @camera
 
-  render: () ->
-    @scene.simulate()
-    @renderer.render(@scene, @currentCamera)
+  handleMessage: (msg) ->
+    switch msg.Operation
+      when "RaceGameState" then @loadAndUpdatePlayers(msg.MessageArray)
+
+  loadAndUpdatePlayers: (msg) ->
+    arr = JSON.parse(msg)
+    createObject = false
+    # If only one obj, loop won't execute (and shouldn't)
+    for a in arr
+      if a.PlayerId isnt app.playerId
+        if @playersList[a.PlayerId] is undefined
+          # find car id in list
+          # clone
+          # add to scene
+        @playersList[a.PlayerId] = a
+
+
+  setStateToServer: () ->
+    m = {}
+    m.PlayerId = ""
+    m.Vel = @currentVelocity
+    m.CarId = @car.name
+    t = @car.position
+    m.Pos = [t.x,t.y,t.z]
+    m.Rot = @currentRotation
+    msg = {}
+    msg.Operation = "StateUpdate"
+    msg.RoomID = app.roomID
+    msg.Sender = app.playerId
+    msg.messageMap = JSON.stringify(m)
+    console.log msg
+    app.ws.send(JSON.stringify(msg))
+
 
 window.RacingApp = RacingApp
 
