@@ -276,10 +276,10 @@ func (h *GameHub) Run() {
 
 // Test Quizbowl
 func (h *GameHub) TestQuiz() {
-  h.lobby.game = &RacingGame{}
-  h.lobby.game.init()	
-  h.lobby.game.startGame(h.lobby, h)
-/*	room := h.rooms["QuizBowl"]
+	h.lobby.game = &RacingGame{}
+	h.lobby.game.init()
+	h.lobby.game.startGame(h.lobby, h)
+	/*	room := h.rooms["QuizBowl"]
 		g := room.game
 		g.init()
 

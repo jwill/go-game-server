@@ -6,6 +6,7 @@ class RacingApp extends App
 
   init: () ->
     @playersList = {}
+    @playersCars = {}
     @carsList = []
     @maxVelocity = 5
     @minVelocity = -5
@@ -51,15 +52,18 @@ class RacingApp extends App
     @planeMesh.position.set(0,0,0)
     @scene.add(@planeMesh)
 
-    
-    @carClone = @carsList[0].clone()
-    @car = new THREE.Mesh(@carClone.geometry, @carClone.material)
-    @car.name = @carsList[0].name
-    @car.position.set(0, 20, 0)
-    @car.scale.set(10,10,10)
+    @car = @cloneCar(@carsList[0], 0, 20, 0)
     @scene.add(@car)
     @createCameraForCar(@car)
     window.animate()
+
+  cloneCar: (obj, x, y, z) ->
+    carClone = obj.clone()
+    tempCar = new THREE.Mesh(carClone.geometry, carClone.material)
+    tempCar.name = obj.name
+    tempCar.position.set(x, y, z)
+    tempCar.scale.set(10,10,10)
+    tempCar
 
   createCameraForCar: (car) ->
     @carCamera = new THREE.PerspectiveCamera(60, 3/2, 1, 2000)
@@ -74,6 +78,12 @@ class RacingApp extends App
   updateObjects: () ->
     @rotateAroundObjectAxisAndMove(@car, @yAxis, @currentRotation / 180 * Math.PI, @currentVelocity)
     @rotateAroundObjectAxisAndMove(@carCamera, @yAxis, @currentRotation / 180 * Math.PI, @currentVelocity)
+    # move other players cars
+    for id, car in @playersCars
+      console.log player
+      player = @playersList[id]
+      @rotateAroundObjectAxisAndMove(car, @yAxis, player.Rot / 180 * Math.PI, player.Vel)
+      
 
   handleInput: (direction) ->
     if direction is 'up'
@@ -139,16 +149,25 @@ class RacingApp extends App
     switch msg.Operation
       when "RaceGameState" then @loadAndUpdatePlayers(msg.MessageArray)
 
-  loadAndUpdatePlayers: (msg) ->
-    arr = JSON.parse(msg)
-    createObject = false
+  loadAndUpdatePlayers: (arr) ->
+    console.log("load and update players")
+    console.log arr
+    window.x = arr
     # If only one obj, loop won't execute (and shouldn't)
-    for a in arr
+    for raw in arr
+      a = JSON.parse(raw)
       if a.PlayerId isnt app.playerId
+        console.log("dfdgef")
         if @playersList[a.PlayerId] is undefined
-          # find car id in list
-          # clone
-          # add to scene
+          car = _.findWhere(@carsList, {name: a.CarId})
+          p = @cloneCar(car)
+          @playersCars[a.PlayerId] = p
+          p.position.set(a.Pos[0], a.Pos[1], a.Pos[2])
+          @scene.add(p)
+        else 
+          p = @playersCars[a.PlayerId]
+          p.position.set(a.Pos[0], a.Pos[1], a.Pos[2])
+
         @playersList[a.PlayerId] = a
 
 
