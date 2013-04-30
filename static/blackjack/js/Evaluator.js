@@ -2,7 +2,7 @@
 
 // should functions not implemented on server yet
 
-var Evaluator = function() {
+var Evaluator = function () {
 //	if ( !(this instanceof arguments.callee) ) {
 //		return new arguments.callee(arguments);
 //	}

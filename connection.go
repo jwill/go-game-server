@@ -87,6 +87,15 @@ func (p *Player) AnnouncePlayer(roomId string, isExiting bool) string {
 	return string(b)
 }
 
+func FindPlayerForId(players []*Player, playerId string)*Player {
+	for _, player := range players {
+		if player.id == playerId {
+			return player
+		}
+	}
+	return nil
+}
+
 // Send Initial information back to Player
 func (p *Player) SendPlayerIdentity() {
 	msg := Message{

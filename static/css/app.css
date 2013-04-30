@@ -1,41 +1,42 @@
 #playingArea {
-  height: 100%;
-  margin-left: 30px;
+    height: 100%;
+    margin-left: 30px;
 }
 
 #quizbowlArea {
-  margin-left:30px;
-  float: left;
-  display: none;
+    margin-left: 30px;
+    float: left;
+    display: none;
 }
 
 #category {
-  font-size:1.8em;
+    font-size: 1.8em;
 }
+
 #secondsLeft {
 
 }
 
 #answers .row {
-  margin-left: 30px;
+    margin-left: 30px;
 }
 
 #answers .row button {
-  padding: 10px;
-  margin: 10px;
-  width: 300px;
+    padding: 10px;
+    margin: 10px;
+    width: 300px;
 }
 
 #board {
-  height: 100%;
-  width: 70%;
-  float: left;
-  border: 1px;
-  border-style: solid;
-  border-color: gray;
-  overflow: hidden;
+    height: 100%;
+    width: 70%;
+    float: left;
+    border: 1px;
+    border-style: solid;
+    border-color: gray;
+    overflow: hidden;
 }
 
 #chat {
-  /*height: 500px;*/
+    /*height: 500px;*/
 }

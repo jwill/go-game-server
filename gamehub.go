@@ -49,6 +49,10 @@ var gamehub = GameHub{
 	rooms:       make(map[string]*GameRoom),
 }
 
+func (h *GameHub) GetPlayerConnection(playerId string) *connection {
+	return h.findConnectionForPlayer(playerId)
+}
+
 func (h *GameHub) findConnectionForPlayer(playerId string) *connection {
 	p := h.players[playerId]
 	if p != nil {
@@ -93,8 +97,8 @@ func (h *GameHub) handleMessage(msg string) bool {
 		h.rooms[r.roomId] = r
 		fmt.Println(h.getRoomList())
 
-	// message to say room was created
-	// move player to room
+		// message to say room was created
+		// move player to room
 	case "ChangeNick":
 		msg := player.ChangeNick(data.Message)
 		h.sendBroadcastMessage(msg, "Lobby")
@@ -225,9 +229,16 @@ func (h *GameHub) createDemoRooms() {
 	h.rooms[quizbowl.roomId] = quizbowl
 
 	// Racing Room
-	racing := &GameRoom{players: make(map[string]bool)}
-	racing.roomId = "Racing"
-	h.rooms[racing.roomId] = racing
+	//racing := &GameRoom{players: make(map[string]bool)}
+	//racing.roomId = "Racing"
+	//h.rooms[racing.roomId] = racing
+
+	blackjack := &GameRoom{players: make(map[string]bool)}
+	blackjack.roomId = "BlackJack"
+	blackjack.game = &BlackJackGame{}
+	blackjack.game.init()
+
+	h.rooms[blackjack.roomId] = blackjack
 }
 
 func (h *GameHub) Run() {
@@ -243,21 +254,21 @@ func (h *GameHub) Run() {
 	for {
 		select {
 
-		// Player entered lobby.
+			// Player entered lobby.
 		case p := <-h.register:
 			h.players[p.id] = p
 			h.connections[p.conn] = true
 			h.lobby.addPlayer(p)
 			log.Debug("Added Player " + p.id)
 
-		// Player exited website.
+			// Player exited website.
 		case p := <-h.unregister:
 			delete(h.players, p.id)
 			delete(h.connections, p.conn)
 			close(p.conn.send)
 			log.Debug("Player " + p.id + " exited")
 
-		// Distribute broadcast messages to all connections.
+			// Distribute broadcast messages to all connections.
 		case m := <-h.broadcast:
 			if h.handleMessage(m) != true {
 				for c := range h.connections {
@@ -280,11 +291,11 @@ func (h *GameHub) TestQuiz() {
 	d.ShuffleDecks()
 	fmt.Println(d)
 	hand := &Hand{}
-	hand.cards = d.DealCards(4)
-	fmt.Println(hand.cards)
+	hand.Cards = d.DealCards(4)
+	fmt.Println(hand.Cards)
 	eval := &Evaluator{}
-	fmt.Println(eval.getHandTotals(hand))
-	fmt.Println(eval.evaluate(hand))
+	fmt.Println(eval.GetHandTotals(hand))
+	fmt.Println(eval.Evaluate(hand))
 
 	//h.lobby.game = &RacingGame{}
 	//h.lobby.game.init()

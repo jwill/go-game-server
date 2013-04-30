@@ -45,7 +45,7 @@ func (quiz *QuizBowlGame) startGame(room *GameRoom, h *GameHub) {
 		quiz.gameStarted = true
 		go func() {
 			for _, q := range quiz.questions {
-				time.Sleep(15 * time.Second)
+				time.Sleep(15*time.Second)
 				quiz.SendQuestion(room.roomId, q.QuestionId, h)
 			}
 			quiz.gameStarted = false

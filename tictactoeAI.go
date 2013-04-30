@@ -117,13 +117,13 @@ func (t *TicTacToeAI) miniMax(depth int, currentPlayer string) []int {
 		for _, v := range moves {
 			t.board[v[0]][v[1]] = currentPlayer
 			if currentPlayer == t.compLetter {
-				currentScore = t.miniMax(depth-1, GetOtherPlayer(currentPlayer))[0]
+				currentScore = t.miniMax(depth - 1, GetOtherPlayer(currentPlayer))[0]
 				if currentScore > bestScore {
 					bestScore = currentScore
 					bestMove = v
 				}
 			} else { // oppSeed is minimizing player
-				currentScore = t.miniMax(depth-1, t.compLetter)[0]
+				currentScore = t.miniMax(depth - 1, t.compLetter)[0]
 				if currentScore < bestScore {
 					bestScore = currentScore
 					bestMove = v

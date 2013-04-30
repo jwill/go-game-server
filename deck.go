@@ -38,12 +38,13 @@ func (c *Card) Equals(d *Card) bool {
 }
 
 type Hand struct {
-	cards []*Card
+	Result *EvaluatorResult
+	Cards []*Card
 }
 
 type Deck struct {
-	numDecks int
-	cards    []*Card
+	numDecks    int
+	cards       []*Card
 	sortedCards []*Card
 
 }
@@ -60,7 +61,7 @@ func (d *Deck) String() string {
 	for _, c := range d.cards {
 		vals = append(vals, c.String())
 	}
-	return "["+ strings.Join(vals, " ")+"]"
+	return "[" + strings.Join(vals, " ") + "]"
 }
 
 func (d *Deck) initCards() {
@@ -71,7 +72,7 @@ func (d *Deck) initCards() {
 	// Populate card array
 	for i := 0; i < d.numDecks; i++ {
 		for _, suit := range suits {
-			for j, ordinal := range ordinals{
+			for j, ordinal := range ordinals {
 				d.sortedCards = append(d.sortedCards, &Card{ord:ordinal, val:vals[j], suit:suit})
 			}
 		}
@@ -86,29 +87,29 @@ func (d *Deck) swap(a int, b int) {
 }
 
 func (d *Deck) ShuffleDecks() {
-	rand.Seed( time.Now().UTC().UnixNano())
+	rand.Seed(time.Now().UTC().UnixNano())
 
-	for i:=0; i<d.numDecks; i++ {
-		for j:= d.numDecks*51; j>0; j-- {
+	for i := 0; i < d.numDecks; i++ {
+		for j := d.numDecks*51; j > 0; j-- {
 			var r = rand.Intn(j)
-			d.swap(j,r)
+			d.swap(j, r)
 		}
 	}
 }
 
-func (d *Deck) DealCards(num int)[]*Card {
+func (d *Deck) DealCards(num int) []*Card {
 	var cards = make([]*Card, 0)
-	for i:=0; i<num; i++ {
+	for i := 0; i < num; i++ {
 		cards = append(cards, d.DealCard())
 	}
 	return cards
 }
 
-func (d *Deck) DealCard()*Card {
+func (d *Deck) DealCard() *Card {
 	if (len(d.cards) > 0) {
-	   card := d.cards[0:1]
-	   d.cards = d.cards[1:]
-	   return card[0]
+		card := d.cards[0:1]
+		d.cards = d.cards[1:]
+		return card[0]
 	} else {
 		d.reshuffleDecks()
 		return d.DealCard()
@@ -118,8 +119,8 @@ func (d *Deck) DealCard()*Card {
 
 func (d *Deck) reshuffleDecks() {
 	d.cards = make([]*Card, 52*d.numDecks)
-    copy(d.cards, d.sortedCards)
-   d.ShuffleDecks()
+	copy(d.cards, d.sortedCards)
+	d.ShuffleDecks()
 }
 
 /*

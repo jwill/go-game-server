@@ -24,32 +24,31 @@ class RacingApp extends App
   loadCars: () ->
     loader = new THREE.JSONLoader()
     for i in [1..12]
-      loader.load('/public/assets/cars_pack/Car'+i+'.js', @geom, '/public/assets/cars_pack')
-      #loader.load('/public/assets/urban_road/level2.js', @handleRoadGeom, '/public/assets/urban_road')
-      
-    
+      loader.load('/public/assets/cars_pack/Car' + i + '.js', @geom, '/public/assets/cars_pack')
+  #loader.load('/public/assets/urban_road/level2.js', @handleRoadGeom, '/public/assets/urban_road')
+
+
   handleRoadGeom: (g, m) ->
     self = this
-    tjs.road = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m),0)
-    tjs.road.position.set(0,0,0)
-    tjs.road.scale.set(8,1,8)
+    tjs.road = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m), 0)
+    tjs.road.position.set(0, 0, 0)
+    tjs.road.scale.set(8, 1, 8)
     tjs.scene.add(tjs.road)
 
   geom: (g, m) ->
     self = this
     obj = new THREE.Mesh(g, new THREE.MeshFaceMaterial(m))
-    carId = m[0].name.substring(0,2)
-    obj.name = 'Car'+carId
+    carId = m[0].name.substring(0, 2)
+    obj.name = 'Car' + carId
     tjs.carsList.push obj
-    if (tjs.carsList.length is 12) 
+    if (tjs.carsList.length is 12)
       # Try to wait until all the async calls are done
       setTimeout(tjs.drawScene(), 5000)
-    
+
   drawScene: () ->
-    
-    @planeMesh = new THREE.Mesh(new THREE.CubeGeometry(100,1,100), new THREE.MeshBasicMaterial({color: 0x085A14}), 0)
-    @planeMesh.scale.set(20,0.01,20)
-    @planeMesh.position.set(0,0,0)
+    @planeMesh = new THREE.Mesh(new THREE.CubeGeometry(100, 1, 100), new THREE.MeshBasicMaterial({color: 0x085A14}), 0)
+    @planeMesh.scale.set(20, 0.01, 20)
+    @planeMesh.position.set(0, 0, 0)
     @scene.add(@planeMesh)
 
     @car = @cloneCar(@carsList[0], 0, 20, 0)
@@ -62,13 +61,13 @@ class RacingApp extends App
     tempCar = new THREE.Mesh(carClone.geometry, carClone.material)
     tempCar.name = obj.name
     tempCar.position.set(x, y, z)
-    tempCar.scale.set(10,10,10)
+    tempCar.scale.set(10, 10, 10)
     tempCar
 
   createCameraForCar: (car) ->
-    @carCamera = new THREE.PerspectiveCamera(60, 3/2, 1, 2000)
+    @carCamera = new THREE.PerspectiveCamera(60, 3 / 2, 1, 2000)
     @carCamera.position = new THREE.Vector3(car.position.x, car.position.y + 5, car.position.z - 10)
-    @carCamera.target = new THREE.Vector3(car.position.x,car.position.y,car.position.z)
+    @carCamera.target = new THREE.Vector3(car.position.x, car.position.y, car.position.z)
     @scene.add(@carCamera)
 
   render: () ->
@@ -83,7 +82,7 @@ class RacingApp extends App
       console.log player
       player = @playersList[id]
       @rotateAroundObjectAxisAndMove(car, @yAxis, player.Rot / 180 * Math.PI, player.Vel)
-      
+
 
   handleInput: (direction) ->
     if direction is 'up'
@@ -127,17 +126,19 @@ class RacingApp extends App
     self = this
     @k.down('w', () ->
       self.handleInput('up'))
-    @k.up('w', () -> @currentVelocity = 0)
+    @k.up('w', () ->
+      @currentVelocity = 0)
     @k.down('s', () ->
       self.handleInput('down'))
-    @k.up('s', () -> @currentVelocity = 0)
+    @k.up('s', () ->
+      @currentVelocity = 0)
     @k.down('left', () ->
       self.handleInput('left'))
-    @k.up('left', () -> )
+    @k.up('left', () ->)
     @k.down('right', () ->
       self.handleInput('right'))
-    @k.up('right', () -> )
-    @k.down('p', () -> 
+    @k.up('right', () ->)
+    @k.down('p', () ->
       self.toggleCamera())
 
   toggleCamera: () ->
@@ -164,7 +165,7 @@ class RacingApp extends App
           @playersCars[a.PlayerId] = p
           p.position.set(a.Pos[0], a.Pos[1], a.Pos[2])
           @scene.add(p)
-        else 
+        else
           p = @playersCars[a.PlayerId]
           p.position.set(a.Pos[0], a.Pos[1], a.Pos[2])
 
@@ -177,7 +178,7 @@ class RacingApp extends App
     m.Vel = @currentVelocity
     m.CarId = @car.name
     t = @car.position
-    m.Pos = [t.x,t.y,t.z]
+    m.Pos = [t.x, t.y, t.z]
     m.Rot = @currentRotation
     msg = {}
     msg.Operation = "StateUpdate"

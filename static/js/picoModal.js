@@ -23,16 +23,16 @@
 /**
  * A self-contained modal library
  */
-window['picoModal'] = (function(document) {
+window['picoModal'] = (function (document) {
 
     // Generates observable objects that can be watched and triggered
-    var observable = function() {
+    var observable = function () {
         var callbacks = [];
         return {
-            watch: function(callback) {
+            watch: function (callback) {
                 callbacks.push(callback);
             },
-            trigger: function() {
+            trigger: function () {
                 for (var i = 0; i < callbacks.length; i++) {
                     setTimeout(callbacks[i], 1);
                 }
@@ -41,7 +41,7 @@ window['picoModal'] = (function(document) {
     };
 
     // A small interface for creating and managing a dom element
-    var make = function( parent ) {
+    var make = function (parent) {
 
         var elem = document.createElement('div');
         (parent || document.body).appendChild(elem);
@@ -56,10 +56,10 @@ window['picoModal'] = (function(document) {
             },
 
             // Applies a set of styles to an element
-            stylize: function(styles) {
+            stylize: function (styles) {
                 styles = styles || {};
 
-                if ( typeof styles.opacity != "undefined" )
+                if (typeof styles.opacity != "undefined")
                     styles.filter = "alpha(opacity=" + (styles.opacity * 100) + ")";
 
                 for (var prop in styles) {
@@ -89,7 +89,7 @@ window['picoModal'] = (function(document) {
             },
 
             // Adds a click handler to this element
-            onClick: function(callback) {
+            onClick: function (callback) {
                 if (elem.attachEvent)
                     elem.attachEvent('onclick', callback);
                 else
@@ -98,7 +98,7 @@ window['picoModal'] = (function(document) {
             },
 
             // Removes this element from the DOM
-            destroy: function() {
+            destroy: function () {
                 document.body.removeChild(elem);
                 return iface;
             }
@@ -109,7 +109,7 @@ window['picoModal'] = (function(document) {
     };
 
     // An interface for generating the grey-out effect
-    var overlay = function(styles) {
+    var overlay = function (styles) {
 
         // The registered on click events
         var clickCallbacks = observable();
@@ -139,12 +139,12 @@ window['picoModal'] = (function(document) {
     };
 
     // A function for easily displaying a modal with the given content
-    return function(options) {
+    return function (options) {
 
-        if ( typeof options === "string" )
+        if (typeof options === "string")
             options = { content: options, closeButton: true };
 
-        var shadow = overlay( options.overlayStyles );
+        var shadow = overlay(options.overlayStyles);
 
         var closeCallbacks = observable();
 
@@ -160,7 +160,7 @@ window['picoModal'] = (function(document) {
                 padding: "20px",
                 borderRadius: "5px"
             })
-            .html(options.content );
+            .html(options.content);
 
         var width = options.width || elem.getWidth();
 
@@ -169,7 +169,7 @@ window['picoModal'] = (function(document) {
                 width: width + "px",
                 margin: "0 0 0 " + (-(width / 2) + "px")
             })
-            .stylize( options.modalStyles );
+            .stylize(options.modalStyles);
 
         var close = function () {
             closeCallbacks.trigger();
@@ -180,7 +180,7 @@ window['picoModal'] = (function(document) {
         shadow.onClick(close);
 
         var closeButton;
-        if ( options.closeButton ) {
+        if (options.closeButton) {
             closeButton = elem.child()
                 .html("&#xD7;")
                 .clazz("pico-close")
@@ -197,7 +197,7 @@ window['picoModal'] = (function(document) {
                     lineHeight: "15px",
                     background: "#CCC"
                 })
-                .stylize( options.closeStyles )
+                .stylize(options.closeStyles)
                 .onClick(close);
         }
 
