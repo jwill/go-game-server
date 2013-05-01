@@ -2,6 +2,7 @@ package main
 
 import (
 	//"fmt"
+	"launchpad.net/rjson"
 	"math/rand"
 	"strings"
 	"time"
@@ -24,8 +25,11 @@ func (c *Card) String() string {
 }
 
 func (c *Card) MarshalJSON() ([]byte, error) {
-	array := []byte(c.String())
-	return array, nil
+	data := make(map[string]string)
+	data["suit"] = c.suit
+	data["ord"] = c.ord
+	b, err := rjson.Marshal(data)
+	return b, err
 }
 
 func (c *Card) Equals(d *Card) bool {

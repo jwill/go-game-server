@@ -34,8 +34,8 @@ function Card(ordinal, val, suit) {
         self.val = val;
         self.meta = new Object();
         if (self.ord != undefined) {
-            self.cardBackPath = "http://ribbitwave.appspot.com/" + "images/45dpi/back.png";
-            self.cardFrontPath = "http://ribbitwave.appspot.com/" + "images/45dpi/" + self.ord + "_" + self.suit + ".png";
+            self.cardBackPath = "/public/blackjack/images/45dpi/back.png";
+            self.cardFrontPath = "/public/blackjack/images/45dpi/" + self.ord + "_" + self.suit + ".png";
             self.meta = new Object();
             self.cardBack = new CachedImageView(backImage, width, height);
 

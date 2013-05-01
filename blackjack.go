@@ -68,9 +68,11 @@ func (g *BlackJackGame) WaitForBets(h *GameHub) {
 					player := h.players[name]
 					msg := player.data.(*BlackJackMessage)
 					msg.Hand.Cards = append(msg.Hand.Cards, g.deck.DealCard())
+					msg.Hand.Result = g.evaluator.Evaluate(msg.Hand)
 					log.Debug("", msg.Hand.Cards)
 				}
 				g.dealerHand.Cards = append(g.dealerHand.Cards, g.deck.DealCard())
+				g.findFirstPlayer(h)
 				g.sendUpdate(h)
 			}
 			log.Debug("", g.dealerHand.Cards)
@@ -96,8 +98,17 @@ func clearHands(player *Player) {
 	msg.Hand = &Hand{}
 }
 
-func (g *BlackJackGame) getOpenSeats() {
-
+func (g *BlackJackGame) findFirstPlayer(h *GameHub) {
+	for _, v := range g.positions {
+		for key, value := range v {
+			if key == "name" {
+				player := h.players[value]
+				msg := player.data.(*BlackJackMessage)
+				msg.IsPlayerTurn = true
+				break
+			}
+		}
+	}
 }
 
 func (g *BlackJackGame) findPlayerAtTable(playerId string) int {
@@ -182,23 +193,18 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 		handledMessage = true
 	case "Hit":
 		msg := player.data.(*BlackJackMessage)
-		if msg.Hand.Result.IsBust == false {
-			msg.Hand.Cards = append(msg.Hand.Cards, g.deck.DealCard())
+		if msg.IsPlayerTurn == true {
+			if msg.Hand.Result.IsBust == false {
+				msg.Hand.Cards = append(msg.Hand.Cards, g.deck.DealCard())
+			}
+			msg.Hand.Result = g.evaluator.Evaluate(msg.Hand)
+			if msg.Hand.Result.IsBust == true {
+				g.nextPlayer(h, player)
+			}
 		}
-		msg.Hand.Result = g.evaluator.Evaluate(msg.Hand)
 		handledMessage = true
 	case "Stay":
-		msg := player.data.(*BlackJackMessage)
-		msg.IsPlayerTurn = false
-		//(player.data.(BlackJackMessage)).IsPlayerTurn = false
-		if g.currentPosition+1 > len(g.positions) {
-			g.currentPosition++
-			nextPlayerData := g.positions[g.currentPosition]
-			nextPlayerName := nextPlayerData["name"]
-			nextPlayer := h.players[nextPlayerName].data.(*BlackJackMessage)
-
-			nextPlayer.IsPlayerTurn = true
-		}
+		g.nextPlayer(h, player)
 		handledMessage = true
 	case "Bet":
 		if g.phase == "BET" {
@@ -214,6 +220,23 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 	}
 	g.sendUpdate(h)
 	return handledMessage
+}
+
+func (g *BlackJackGame) nextPlayer(h *GameHub, player *Player) {
+	log.Debug("Next Player")
+	msg := player.data.(*BlackJackMessage)
+	msg.IsPlayerTurn = false
+	if g.currentPosition+1 > len(g.positions) {
+		g.currentPosition++
+		nextPlayerData := g.positions[g.currentPosition]
+		nextPlayerName := nextPlayerData["name"]
+		nextPlayer := h.players[nextPlayerName].data.(*BlackJackMessage)
+
+		nextPlayer.IsPlayerTurn = true
+	} else {
+		//Dealer's turn
+		fmt.Println("dealer")
+	}
 }
 
 func (g *BlackJackGame) sendUpdate(h *GameHub) {
@@ -235,6 +258,16 @@ func (g *BlackJackGame) sendUpdate(h *GameHub) {
 			updates = append(updates, string(item))
 		}
 	}
+	// Add dealer
+	dealerMsg := &BlackJackMessage{}
+	dealerMsg.Hand = g.dealerHand
+	dealerMsg.PlayerId = "Dealer"
+
+	item2, err3 := rjson.Marshal(dealerMsg)
+	if err3 == nil {
+		updates = append(updates, string(item2))
+	}
+
 	msg := Message{
 		Operation:    "BlackJackGameState",
 		Sender:       "Server",
@@ -251,7 +284,7 @@ func (g *BlackJackGame) playDealerHand() {
 func (g *BlackJackGame) EvaluateHands() {
 	/*for _, player := range g.room.players {
 
-							} */
+									} */
 }
 
 //BlackJackGame.prototype.evaluateHands = function (dealerHand) {

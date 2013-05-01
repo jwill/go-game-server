@@ -193,6 +193,7 @@ BlackJackGame.prototype.adjustControls = function () {
     }
 }
 
+
 BlackJackGame.prototype.setupKeys = function () {
     this.k.down('h', function () {
         var player;
@@ -240,49 +241,24 @@ BlackJackGame.prototype.drawPlayerHeader = function (player) {
 
 BlackJackGame.prototype.updateGameBoard = function () {
     this.drawBackground(this.ctx, this.gameWidth, this.gameHeight);
-    //this.drawBackground(this.getSidebarContext(), this.sidebarWidth, this.sidebarHeight);
-    //this.drawVideoFeed();
     //this.adjustControls();
-    // Draw the dealer
-    if ((this.gameState == 'BET') || (this.gameState == 'DEAL') || (this.gameState == 'PLAY'))
-        this.dealer.getCurrentHand().drawDealerHand(this.getContext());
-    else this.dealer.getCurrentHand().drawHand(this.getContext());
 
     // Draw the player panel
     // TODO Allow drawing other players and storing the current viewed player
-    var self = this;
-    var currentPlayer = _.find(this.players, function (p) {
-        return p.id === self.playerId
-    });
-    if (currentPlayer != undefined) {
-        this.drawPlayerHeader(currentPlayer);
-
-        _.each(currentPlayer.hands, function (hand) {
-            hand.drawHand(self.getSidebarContext());
-        });
-
+    for (var i = 0; i<this.players.length; i++) {
+        var player = this.players[i];
+        // Extend to handle more hands later
+        if (player != null) {
+            var hand = player.getCurrentHand();
+            hand.drawHand(this.ctx, 1);
+        }
     }
+
+
     //this.adjustControls();
     // Draw the static assets
 
 };
-
-BlackJackGame.prototype.newRound = function () {
-    var updates = {};
-    updates['gameState'] = 'DEAL';
-    this.players = this.loadPlayerData();
-    _.each(this.players, function (player) {
-        player.clearCards();
-        updates[player.id] = player.toString();
-    });
-
-    this.dealer.clearCards();
-    updates['dealer'] = this.dealer.toString();
-    this.evaluator.setDealer(this.dealer.getCurrentHand());
-
-    game.updateGameBoard();
-    //gapi.hangout.data.submitDelta(updates);
-}
 
 BlackJackGame.prototype.createTurnIndicator = function () {
     var url = "/public/blackjack/images/button.png";
@@ -303,27 +279,41 @@ BlackJackGame.prototype.findPlayerById = function (id) {
 }
 
 BlackJackGame.prototype.loadState = function (text) {
+    var p = new Player();
     var playerData = JSON.parse(text);
     if (playerData != null) {
-    var handsData = JSON.parse(playerData.hands);
-    var hands = [];
-    // Parse cards/hands
-    _.each(handsData, function (hand) {
-        var h = new Hand();
-        _.each(hand, function (cardValue) {
-            var card = game.deck.lookupCard(JSON.parse(cardValue));
-            h.addToHand(card);
-        });
-        hands.push(h);
-    });
+        p.id = playerData.PlayerId;
+        p.currentBet = playerData.CurrentBet;
+        p.tokens = playerData.Chips;
+        var handsData = playerData.Hand;
+        var hands = [];
+        // Parse cards/hands
+        //_.each(handsData, function (hand) {
+            var h = new Hand();
+            _.each(handsData.Cards, function (cardValue) {
+                var card = app.currentGame.deck.lookupCard(cardValue);
+                h.addToHand(card);
+            });
+            hands.push(h);
+        //});
+        p.hands = hands;
     }
-    return hands;
+    return p;
 };
 
 BlackJackGame.prototype.handleMessage = function (msg) {
     switch (msg.Operation) {
         case 'BlackJackGameState':
-
+            var self = this;
+            var playersList = [];
+            console.log("game state");
+            _.each(msg.MessageArray, function(data) {
+                var player = self.loadState(data);
+                playersList.push(player);
+            });
+            self.players = playersList;
+            this.calculateHandPositions();
+            this.updateGameBoard();
             break;
         default:
             break;
@@ -331,36 +321,18 @@ BlackJackGame.prototype.handleMessage = function (msg) {
 }
 
 BlackJackGame.prototype.calculateHandPositions = function () {
+    var radius = this.canvas.width/2;
+    var dealerX = this.canvas.width/2 - 15;
+    var dealerY = 10;
+    this.players[5].getCurrentHand().setPosition(dealerX, dealerY);
+    // TODO smarter algo
 
-}
 
-BlackJackGame.prototype.stateUpdated = function (evt) {
-    var gameHost = game.getGameHost();
-    var currentPlayer = gapi.hangout.getLocalParticipantId();
-    if (game.isGameHost()) {
-        // Only run on host
-        // Manage game state and evaluators
-        game.gameState = evt.state.gameState;
-        if (game.gameState != undefined) {
-            if (game.gameState.substr(0, 5) == "DPLAY") {
-                game.gameState = 'DPLAY';
-                console.log('DPLAY');
-                //try {
-                game.playDealerHand();
-            } else if (game.gameState == 'EVAL') {
-                // Evaluate game hands and do payouts
-                var hand = game.loadState('dealer')[0];
-                var handStatus = game.evaluator.evaluate(hand);
-                game.evaluateHands(handStatus);
-            } else {
-                game.players = game.loadPlayerData();
-                game.updateGameBoard();
-            }
-        }
-    } else {
-        game.players = game.loadPlayerData();
-        game.updateGameBoard();
-
+    for (var i = 0; i<5; i++) {
+        var intervalRadians = 30 * 180/Math.PI;
+        var x = i*75;
+        var y = i*35;
+        var hand = this.players[i].getCurrentHand().setPosition(x, y);
     }
 }
 
@@ -390,6 +362,25 @@ BlackJackGame.prototype.bet = function (amount) {
         RoomId: app.roomID,
         Sender: app.playerId,
         Message: "" + amount
+    }
+    app.ws.send(JSON.stringify(message));
+}
+
+
+BlackJackGame.prototype.hit = function() {
+    var message = {
+        Operation: "Hit",
+        RoomId: app.roomID,
+        Sender: app.playerId
+    }
+    app.ws.send(JSON.stringify(message));
+}
+
+BlackJackGame.prototype.stay = function() {
+    var message = {
+        Operation: "Stay",
+        RoomId: app.roomID,
+        Sender: app.playerId
     }
     app.ws.send(JSON.stringify(message));
 }

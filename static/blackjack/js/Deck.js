@@ -6,8 +6,7 @@ backImage = new Image()
 backImage.onload = function () {
     console.log("loaded");
 }
-window['root'] = "//ribbitwave.appspot.com/";
-backImage.src = window['root'] + "images/45dpi/back.png";
+backImage.src = "/public/blackjack/images/45dpi/back.png";
 
 function Deck(numDecks, ctx) {
     if (!(this instanceof arguments.callee)) {
