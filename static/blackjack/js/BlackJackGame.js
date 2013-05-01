@@ -352,7 +352,7 @@ BlackJackGame.prototype.stateUpdated = function (evt) {
     }
 }
 
-BlackJackGame.prototype.standUp = function() {
+BlackJackGame.prototype.standUp = function () {
     var message = {
         Operation: "StandUp",
         RoomId: app.roomID,
@@ -363,13 +363,23 @@ BlackJackGame.prototype.standUp = function() {
 }
 
 BlackJackGame.prototype.sitDown = function (pos) {
-  var message = {
-      Operation: "SitDown",
-      RoomId: app.roomID,
-      Sender: app.playerId,
-      Message: ""+pos
-  }
-  app.ws.send(JSON.stringify(message));
+    var message = {
+        Operation: "SitDown",
+        RoomId: app.roomID,
+        Sender: app.playerId,
+        Message: "" + pos
+    }
+    app.ws.send(JSON.stringify(message));
+}
+
+BlackJackGame.prototype.bet = function (amount) {
+    var message = {
+        Operation: "Bet",
+        RoomId: app.roomID,
+        Sender: app.playerId,
+        Message: "" + amount
+    }
+    app.ws.send(JSON.stringify(message));
 }
 
 window.BlackJackGame = BlackJackGame;

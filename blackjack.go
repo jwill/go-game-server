@@ -35,7 +35,6 @@ func (g *BlackJackGame) init() {
 }
 
 func (g *BlackJackGame) startGame(r *GameRoom, h *GameHub) {
-
 	if g.gameStarted != true {
 		g.room = r
 		g.WaitForBets(h)
@@ -49,9 +48,10 @@ func (g *BlackJackGame) startGame(r *GameRoom, h *GameHub) {
 func (g *BlackJackGame) WaitForBets(h *GameHub) {
 	go func() {
 		var haveBets bool
+
+		g.state = "BET"
 		log.Debug("Waiting for bets")
 		time.Sleep(10 * time.Second)
-		log.Debug("")
 		for _, v := range g.positions {
 			for key, value := range v {
 				if key == "bet" && value != "0" {
@@ -85,21 +85,24 @@ func (g *BlackJackGame) findPlayerAtTable(playerId string) int {
 	return -1
 }
 
-func (g *BlackJackGame) sitDown(pos int, playerId string) {
-	currentSeat := g.findPlayerAtTable(playerId)
+func (g *BlackJackGame) sitDown(pos int, player *Player) {
+	currentSeat := g.findPlayerAtTable(player.id)
 	seatEmpty := len(g.positions[pos]) == 0
 	if seatEmpty == true {
 		if currentSeat == -1 {
 			vals := make(map[string]string, 0)
-			vals["name"] = playerId
+			vals["name"] = player.id
 			g.positions[pos] = vals
 			log.Debug("Player sat down at seat ", pos)
 		} else {
+			log.Debug("Player was at ", currentSeat, " now seated at ", pos)
 			vals := g.positions[currentSeat]
 			g.positions[pos] = vals
 			g.positions[currentSeat] = make(map[string]string, 0)
 		}
-
+		if player.data == nil {
+			player.data = new(BlackJackMessage)
+		}
 	} else {
 		log.Debug("Tried to sit where other player is sitting")
 	}
@@ -127,7 +130,7 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 	case "SitDown":
 		seatNum, err := strconv.Atoi(data.Message)
 		if err == nil {
-			g.sitDown(seatNum, sender)
+			g.sitDown(seatNum, player)
 		}
 		handledMessage = true
 	case "StandUp":
@@ -139,21 +142,21 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 		}
 		handledMessage = true
 	case "Hit":
-		msg := player.data.(BlackJackMessage)
+		msg := player.data.(*BlackJackMessage)
 		if msg.Hand.Result.IsBust == false {
 			msg.Hand.Cards = append(msg.Hand.Cards, g.deck.DealCard())
 		}
 		msg.Hand.Result = g.evaluator.Evaluate(msg.Hand)
 		handledMessage = true
 	case "Stay":
-		msg := player.data.(BlackJackMessage)
+		msg := player.data.(*BlackJackMessage)
 		msg.IsPlayerTurn = false
 		//(player.data.(BlackJackMessage)).IsPlayerTurn = false
 		if g.currentPosition+1 > len(g.positions) {
 			g.currentPosition++
 			nextPlayerData := g.positions[g.currentPosition]
 			nextPlayerName := nextPlayerData["name"]
-			nextPlayer := h.players[nextPlayerName].data.(BlackJackMessage)
+			nextPlayer := h.players[nextPlayerName].data.(*BlackJackMessage)
 
 			nextPlayer.IsPlayerTurn = true
 		}
@@ -162,12 +165,14 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 		if g.state == "BET" {
 			bet, err := strconv.Atoi(data.Message)
 			if err == nil {
-				msg := player.data.(BlackJackMessage)
+				msg := player.data.(*BlackJackMessage)
 				msg.CurrentBet = bet
 			}
+		} else {
+			log.Debug(player.id + " tried to bet at wrong time.")
 		}
 		handledMessage = true
-		log.Debug(player.id + " tried to bet at wrong time.")
+
 	}
 	g.sendUpdate(h)
 	return handledMessage
@@ -177,15 +182,19 @@ func (g *BlackJackGame) sendUpdate(h *GameHub) {
 	var player *Player
 	updates := make([]string, 0)
 	fmt.Println(g.room)
-	for p := range g.room.players {
-		player = h.players[p]
-		if player.data != nil {
-			blackjackMsg := player.data.(BlackJackMessage)
-			blackjackMsg.PlayerId = player.id
-			item, err2 := rjson.Marshal(blackjackMsg)
-			if err2 == nil {
-				updates = append(updates, string(item))
+	for _, v := range g.positions {
+		var blackjackMsg *BlackJackMessage
+		if len(v) != 0 {
+			name := v["name"]
+			player = h.players[name]
+			if player.data != nil {
+				blackjackMsg = player.data.(*BlackJackMessage)
+				blackjackMsg.PlayerId = player.id
 			}
+		}
+		item, err2 := rjson.Marshal(blackjackMsg)
+		if err2 == nil {
+			updates = append(updates, string(item))
 		}
 	}
 	msg := Message{
@@ -204,7 +213,7 @@ func (g *BlackJackGame) playDealerHand() {
 func (g *BlackJackGame) EvaluateHands() {
 	/*for _, player := range g.room.players {
 
-		} */
+			} */
 }
 
 //BlackJackGame.prototype.evaluateHands = function (dealerHand) {
