@@ -254,7 +254,7 @@ func (h *GameHub) Run() {
 	for {
 		select {
 
-			// Player entered lobby.
+		// Player entered lobby.
 		case p := <-h.register:
 			h.players[p.id] = p
 			h.connections[p.conn] = true

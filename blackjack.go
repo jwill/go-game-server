@@ -2,19 +2,21 @@ package main
 
 import (
 	"fmt"
-	"launchpad.net/rjson"
 	"github.com/sqp/godock/libs/log"
+	"launchpad.net/rjson"
 	"strconv"
+	"time"
 )
 
 type BlackJackGame struct {
-	room *GameRoom
-	deck *Deck
-	positions       []string
+	room            *GameRoom
+	deck            *Deck
+	positions       []map[string]string
 	currentPosition int
 	state           string
-	evaluator *Evaluator
-	dealerHand *Hand
+	evaluator       *Evaluator
+	dealerHand      *Hand
+	gameStarted     bool
 }
 
 type BlackJackMessage struct {
@@ -22,18 +24,85 @@ type BlackJackMessage struct {
 	Chips        int
 	CurrentBet   int
 	IsPlayerTurn bool
-	Hand *Hand // TODO Extend to handle splits or multiple hands
+	Hand         *Hand // TODO Extend to handle splits or multiple hands
 }
 
 func (g *BlackJackGame) init() {
 	fmt.Println("Initing blackjack game")
 	g.deck = NewDeck(3)
-	g.positions = make([]string, 5)
+	g.positions = make([]map[string]string, 5)
 	g.evaluator = &Evaluator{}
 }
 
 func (g *BlackJackGame) startGame(r *GameRoom, h *GameHub) {
-	g.room = r
+
+	if g.gameStarted != true {
+		g.room = r
+		g.WaitForBets(h)
+		g.gameStarted = true
+	} else {
+		log.Debug("Game already started")
+	}
+
+}
+
+func (g *BlackJackGame) WaitForBets(h *GameHub) {
+	go func() {
+		var haveBets bool
+		log.Debug("Waiting for bets")
+		time.Sleep(10 * time.Second)
+		log.Debug("")
+		for _, v := range g.positions {
+			for key, value := range v {
+				if key == "bet" && value != "0" {
+					haveBets = true
+					break
+				}
+			}
+		}
+		if haveBets {
+			// Deal cards
+		} else {
+			log.Debug("No bets, restarting counter")
+			g.WaitForBets(h)
+		}
+	}()
+}
+
+func (g *BlackJackGame) getOpenSeats() {
+
+}
+
+func (g *BlackJackGame) findPlayerAtTable(playerId string) int {
+	for index, v := range g.positions {
+		log.Debug("", v)
+		for key, value := range v {
+			if key == "name" && value == playerId {
+				return index
+			}
+		}
+	}
+	return -1
+}
+
+func (g *BlackJackGame) sitDown(pos int, playerId string) {
+	currentSeat := g.findPlayerAtTable(playerId)
+	seatEmpty := len(g.positions[pos]) == 0
+	if seatEmpty == true {
+		if currentSeat == -1 {
+			vals := make(map[string]string, 0)
+			vals["name"] = playerId
+			g.positions[pos] = vals
+			log.Debug("Player sat down at seat ", pos)
+		} else {
+			vals := g.positions[currentSeat]
+			g.positions[pos] = vals
+			g.positions[currentSeat] = make(map[string]string, 0)
+		}
+
+	} else {
+		log.Debug("Tried to sit where other player is sitting")
+	}
 }
 
 func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
@@ -56,17 +125,17 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 
 	switch data.Operation {
 	case "SitDown":
-		// Expects a position
-		// If seat not occupied
 		seatNum, err := strconv.Atoi(data.Message)
 		if err == nil {
-			g.positions[seatNum] = player.id
+			g.sitDown(seatNum, sender)
 		}
 		handledMessage = true
 	case "StandUp":
-		seatNum, err := strconv.Atoi(data.Message)
-		if err == nil {
-			g.positions[seatNum] = ""
+		seatNum := g.findPlayerAtTable(sender)
+		log.Debug("", seatNum, "in standup")
+		if seatNum != -1 {
+			g.positions[seatNum] = nil
+			log.Debug("Player at seat ", seatNum, " stood up.")
 		}
 		handledMessage = true
 	case "Hit":
@@ -80,9 +149,10 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 		msg := player.data.(BlackJackMessage)
 		msg.IsPlayerTurn = false
 		//(player.data.(BlackJackMessage)).IsPlayerTurn = false
-		if (g.currentPosition + 1 > len(g.positions)) {
+		if g.currentPosition+1 > len(g.positions) {
 			g.currentPosition++
-			nextPlayerName := g.positions[g.currentPosition]
+			nextPlayerData := g.positions[g.currentPosition]
+			nextPlayerName := nextPlayerData["name"]
 			nextPlayer := h.players[nextPlayerName].data.(BlackJackMessage)
 
 			nextPlayer.IsPlayerTurn = true
@@ -103,7 +173,7 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 	return handledMessage
 }
 
-func (g *BlackJackGame) sendUpdate(h*GameHub) {
+func (g *BlackJackGame) sendUpdate(h *GameHub) {
 	var player *Player
 	updates := make([]string, 0)
 	fmt.Println(g.room)
@@ -131,10 +201,10 @@ func (g *BlackJackGame) playDealerHand() {
 
 }
 
-func (g *BlackJackGame) EvaluateHands () {
+func (g *BlackJackGame) EvaluateHands() {
 	/*for _, player := range g.room.players {
 
-	} */
+		} */
 }
 
 //BlackJackGame.prototype.evaluateHands = function (dealerHand) {
@@ -198,4 +268,4 @@ func (quiz *QuizBowlGame) SendQuestion(roomId string, questionId string, h *Game
 	h.sendBroadcastMessage(msg, roomId)
 }
 
- */
+*/

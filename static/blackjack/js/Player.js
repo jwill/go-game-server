@@ -32,7 +32,7 @@ Player.prototype.hit = function (card) {
         this.stand();
     } else {
         // Save hand to state
-        this.savePlayerState();
+        //this.savePlayerState();
     }
 }
 
@@ -49,7 +49,6 @@ Player.prototype.stand = function () {
     var updates = {};
     updates[this.id] = this.toString();
 
-    console.log("stand");
     if (this.hands.length - 1 != this.currentHand) {
         this.currentHand++;
     } else {
@@ -90,25 +89,25 @@ Player.prototype.toString = function () {
     return JSON.stringify(p);
 }
 
-Player.prototype.savePlayerState = function () {
-    var p = {};
-    p.id = this.id;
-    p.currentBet = this.currentBet;
-    p.tokens = this.tokens;
-    p.isPlayerTurn = this.isPlayerTurn;
-    p.playerImageURL = this.playerImageURL;
-
-    var handsValue = [];
-    for (var i = 0; i < this.hands.length; i++) {
-        var hand = this.hands[i];
-        var handState = hand.getState();
-        handsValue.push(handState);
-    }
-
-    p.hands = JSON.stringify(handsValue);
-    console.log(p);
-    gapi.hangout.data.setValue(p.id, JSON.stringify(p));
-}
+//Player.prototype.savePlayerState = function () {
+//    var p = {};
+//    p.id = this.id;
+//    p.currentBet = this.currentBet;
+//    p.tokens = this.tokens;
+//    p.isPlayerTurn = this.isPlayerTurn;
+//    p.playerImageURL = this.playerImageURL;
+//
+//    var handsValue = [];
+//    for (var i = 0; i < this.hands.length; i++) {
+//        var hand = this.hands[i];
+//        var handState = hand.getState();
+//        handsValue.push(handState);
+//    }
+//
+//    p.hands = JSON.stringify(handsValue);
+//    console.log(p);
+//    gapi.hangout.data.setValue(p.id, JSON.stringify(p));
+//}
 
 Player.prototype.loadPlayerImage = function (imgSrc) {
     var image = new Image();

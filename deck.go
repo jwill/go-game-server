@@ -2,9 +2,9 @@ package main
 
 import (
 	//"fmt"
+	"math/rand"
 	"strings"
 	"time"
-	"math/rand"
 )
 
 type Card struct {
@@ -15,7 +15,7 @@ type Card struct {
 }
 
 func (c *Card) Clone() *Card {
-	d := &Card{meta:c.meta, ord:c.ord, val:c.val, suit:c.suit}
+	d := &Card{meta: c.meta, ord: c.ord, val: c.val, suit: c.suit}
 	return d
 }
 
@@ -39,14 +39,13 @@ func (c *Card) Equals(d *Card) bool {
 
 type Hand struct {
 	Result *EvaluatorResult
-	Cards []*Card
+	Cards  []*Card
 }
 
 type Deck struct {
 	numDecks    int
 	cards       []*Card
 	sortedCards []*Card
-
 }
 
 func NewDeck(num int) *Deck {
@@ -73,7 +72,7 @@ func (d *Deck) initCards() {
 	for i := 0; i < d.numDecks; i++ {
 		for _, suit := range suits {
 			for j, ordinal := range ordinals {
-				d.sortedCards = append(d.sortedCards, &Card{ord:ordinal, val:vals[j], suit:suit})
+				d.sortedCards = append(d.sortedCards, &Card{ord: ordinal, val: vals[j], suit: suit})
 			}
 		}
 	}
@@ -90,7 +89,7 @@ func (d *Deck) ShuffleDecks() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	for i := 0; i < d.numDecks; i++ {
-		for j := d.numDecks*51; j > 0; j-- {
+		for j := d.numDecks * 51; j > 0; j-- {
 			var r = rand.Intn(j)
 			d.swap(j, r)
 		}
@@ -106,7 +105,7 @@ func (d *Deck) DealCards(num int) []*Card {
 }
 
 func (d *Deck) DealCard() *Card {
-	if (len(d.cards) > 0) {
+	if len(d.cards) > 0 {
 		card := d.cards[0:1]
 		d.cards = d.cards[1:]
 		return card[0]
@@ -140,4 +139,4 @@ func (d *Deck) reshuffleDecks() {
       gapi.hangout.data.setValue('deck', JSON.stringify(newCards));
       return [card,newCards];
 
- */
+*/
