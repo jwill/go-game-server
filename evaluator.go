@@ -56,7 +56,7 @@ type EvaluatorResult struct {
 }
 
 func (eval *Evaluator) Evaluate(hand *Hand) *EvaluatorResult {
-	result := &EvaluatorResult{}
+	result := new(EvaluatorResult)
 	result.HandTotals = eval.GetHandTotals(hand)
 	result.MaxTotal = eval.GetMaxHandTotal(hand)
 	result.IsBust = eval.IsBust(hand)

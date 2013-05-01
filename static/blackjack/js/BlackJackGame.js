@@ -2,6 +2,7 @@ var BlackJackGame = function (ws) {
     this.ws = ws;
     this.k = new Kibo();
     this.init();
+    this.players = [];
 };
 
 /*
@@ -301,8 +302,9 @@ BlackJackGame.prototype.findPlayerById = function (id) {
     return null;
 }
 
-BlackJackGame.prototype.loadState = function (id) {
-    var playerData = JSON.parse(gapi.hangout.data.getValue(id));
+BlackJackGame.prototype.loadState = function (text) {
+    var playerData = JSON.parse(text);
+    if (playerData != null) {
     var handsData = JSON.parse(playerData.hands);
     var hands = [];
     // Parse cards/hands
@@ -314,9 +316,19 @@ BlackJackGame.prototype.loadState = function (id) {
         });
         hands.push(h);
     });
+    }
     return hands;
 };
 
+BlackJackGame.prototype.handleMessage = function (msg) {
+    switch (msg.Operation) {
+        case 'BlackJackGameState':
+
+            break;
+        default:
+            break;
+    }
+}
 
 BlackJackGame.prototype.calculateHandPositions = function () {
 

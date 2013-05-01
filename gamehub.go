@@ -290,12 +290,17 @@ func (h *GameHub) TestQuiz() {
 	d := NewDeck(2)
 	d.ShuffleDecks()
 	fmt.Println(d)
-	hand := &Hand{}
+	hand := NewHand()
 	hand.Cards = d.DealCards(4)
 	fmt.Println(hand.Cards)
-	eval := &Evaluator{}
-	fmt.Println(eval.GetHandTotals(hand))
-	fmt.Println(eval.Evaluate(hand))
+	fmt.Println(hand)
+
+	b, err := rjson.Marshal(hand)
+	if err == nil {
+		fmt.Println("serialize", string(b))
+	} else {
+		fmt.Println(err.Error())
+	}
 
 	//h.lobby.game = &RacingGame{}
 	//h.lobby.game.init()

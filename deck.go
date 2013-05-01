@@ -20,14 +20,12 @@ func (c *Card) Clone() *Card {
 }
 
 func (c *Card) String() string {
-	return c.ord + "-" + c.suit
+	return "\"" + c.ord + "-" + c.suit + "\""
 }
 
-func (c *Card) ShallowEquals(d *Card) bool {
-	if c.ord == d.ord && c.suit == d.suit {
-		return true
-	}
-	return false
+func (c *Card) MarshalJSON() ([]byte, error) {
+	array := []byte(c.String())
+	return array, nil
 }
 
 func (c *Card) Equals(d *Card) bool {
@@ -37,9 +35,16 @@ func (c *Card) Equals(d *Card) bool {
 	return false
 }
 
+type Cards []*Card
+
 type Hand struct {
 	Result *EvaluatorResult
-	Cards  []*Card
+	Cards  Cards
+}
+
+func NewHand() *Hand {
+	h := &Hand{Cards: make(Cards, 0), Result: &EvaluatorResult{}}
+	return h
 }
 
 type Deck struct {

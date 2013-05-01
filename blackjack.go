@@ -13,7 +13,7 @@ type BlackJackGame struct {
 	deck            *Deck
 	positions       []map[string]string
 	currentPosition int
-	state           string
+	phase           string
 	evaluator       *Evaluator
 	dealerHand      *Hand
 	gameStarted     bool
@@ -47,26 +47,53 @@ func (g *BlackJackGame) startGame(r *GameRoom, h *GameHub) {
 
 func (g *BlackJackGame) WaitForBets(h *GameHub) {
 	go func() {
-		var haveBets bool
-
-		g.state = "BET"
+		g.phase = "BET"
 		log.Debug("Waiting for bets")
 		time.Sleep(10 * time.Second)
+		haveBetted := make([]string, 0)
 		for _, v := range g.positions {
 			for key, value := range v {
+				log.Debug(key, value)
 				if key == "bet" && value != "0" {
-					haveBets = true
-					break
+					haveBetted = append(haveBetted, v["name"])
 				}
 			}
 		}
-		if haveBets {
+		if len(haveBetted) != 0 {
 			// Deal cards
+			ClearHands(haveBetted, h)
+			g.dealerHand = NewHand()
+			for i := 0; i < 2; i++ {
+				for _, name := range haveBetted {
+					player := h.players[name]
+					msg := player.data.(*BlackJackMessage)
+					msg.Hand.Cards = append(msg.Hand.Cards, g.deck.DealCard())
+					log.Debug("", msg.Hand.Cards)
+				}
+				g.dealerHand.Cards = append(g.dealerHand.Cards, g.deck.DealCard())
+				g.sendUpdate(h)
+			}
+			log.Debug("", g.dealerHand.Cards)
+			// Change from betting phase to playing phase
+			g.phase = "PLAY"
 		} else {
 			log.Debug("No bets, restarting counter")
 			g.WaitForBets(h)
 		}
 	}()
+}
+
+func ClearHands(players []string, h *GameHub) {
+	for _, name := range players {
+		player := h.players[name]
+		msg := player.data.(*BlackJackMessage)
+		msg.Hand = NewHand()
+	}
+}
+
+func clearHands(player *Player) {
+	msg := player.data.(*BlackJackMessage)
+	msg.Hand = &Hand{}
 }
 
 func (g *BlackJackGame) getOpenSeats() {
@@ -102,9 +129,21 @@ func (g *BlackJackGame) sitDown(pos int, player *Player) {
 		}
 		if player.data == nil {
 			player.data = new(BlackJackMessage)
+			msg := player.data.(*BlackJackMessage)
+			msg.Hand = NewHand()
+			msg.Chips = 1000
 		}
 	} else {
 		log.Debug("Tried to sit where other player is sitting")
+	}
+}
+
+func (g *BlackJackGame) bet(amount int, player *Player) {
+	pos := g.findPlayerAtTable(player.id)
+	if pos != -1 {
+		msg := player.data.(*BlackJackMessage)
+		msg.CurrentBet = amount
+		g.positions[pos]["bet"] = strconv.Itoa(amount)
 	}
 }
 
@@ -162,11 +201,10 @@ func (g *BlackJackGame) HandleGameMessage(msg string, h *GameHub) bool {
 		}
 		handledMessage = true
 	case "Bet":
-		if g.state == "BET" {
+		if g.phase == "BET" {
 			bet, err := strconv.Atoi(data.Message)
 			if err == nil {
-				msg := player.data.(*BlackJackMessage)
-				msg.CurrentBet = bet
+				g.bet(bet, player)
 			}
 		} else {
 			log.Debug(player.id + " tried to bet at wrong time.")
@@ -213,7 +251,7 @@ func (g *BlackJackGame) playDealerHand() {
 func (g *BlackJackGame) EvaluateHands() {
 	/*for _, player := range g.room.players {
 
-			} */
+							} */
 }
 
 //BlackJackGame.prototype.evaluateHands = function (dealerHand) {
