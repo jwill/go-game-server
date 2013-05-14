@@ -61,6 +61,17 @@ Hand.prototype.drawHand = function (context, size) {
     }
 }
 
+//Hand.prototype.drawEmptyHand = function(context, size) {
+//    var card = app.deck.cards[0].clone();
+//    this.addToHand(card);
+//    this.addToHand(card.clone());
+//    for (var i = 0; i < this.cards.length; i++) {
+//        var card = this.cards[i];
+//        card.drawBack(context, size);
+//    }
+//    this.cards = [];
+//}
+
 Hand.prototype.getState = function () {
     var cardsArray = [];
     for (var i = 0; i < this.cards.length; i++) {

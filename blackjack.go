@@ -236,6 +236,10 @@ func (g *BlackJackGame) nextPlayer(h *GameHub, player *Player) {
 	} else {
 		//Dealer's turn
 		fmt.Println("dealer")
+		g.evaluator.dealerHand = g.dealerHand
+		g.evaluator.DealerEvaluate(g.deck)
+		g.EvaluateHands(h)
+		g.sendUpdate(h)
 	}
 }
 
@@ -281,10 +285,42 @@ func (g *BlackJackGame) playDealerHand() {
 
 }
 
-func (g *BlackJackGame) EvaluateHands() {
-	/*for _, player := range g.room.players {
+func (g *BlackJackGame) EvaluateHands(h *GameHub) {
+	dealerResult := g.evaluator.Evaluate(g.dealerHand)
+	log.Debug("Evaluating hands")
+	for i, data := range g.positions {
+		if (len(data) != 0) {
+			player := h.players[data["name"]]
+			msg := player.data.(*BlackJackMessage)
+			result := g.evaluator.Evaluate(msg.Hand)
+			if result.IsBust {
+				// Lose
+				log.Debug("Lose")
 
-									} */
+			} else if dealerResult.IsBust {
+				// Win
+				log.Debug("Win")
+
+			} else if result.MaxTotal > dealerResult.MaxTotal {
+				// Lose
+				log.Debug("Lose")
+
+			} else if result.MaxTotal < dealerResult.MaxTotal {
+				// Lose
+				log.Debug("Lose")
+			} else {
+				// Push
+				log.Debug("Push")
+			}
+
+			msg.CurrentBet = 0
+			g.positions[i]["bet"] = "0"
+		}
+	}
+	// Go back to waiting for bets
+	log.Debug("Going back to waiting for bets")
+
+	g.WaitForBets(h)
 }
 
 //BlackJackGame.prototype.evaluateHands = function (dealerHand) {

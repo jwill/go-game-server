@@ -250,7 +250,11 @@ BlackJackGame.prototype.updateGameBoard = function () {
         // Extend to handle more hands later
         if (player != null) {
             var hand = player.getCurrentHand();
-            hand.drawHand(this.ctx, 1);
+            if (i != 5) {
+                hand.drawHand(this.ctx, 1);
+            } else {
+                hand.drawDealerHand(this.ctx, 1);
+            }
         }
     }
 
@@ -330,8 +334,8 @@ BlackJackGame.prototype.calculateHandPositions = function () {
 
     for (var i = 0; i<5; i++) {
         var intervalRadians = 30 * 180/Math.PI;
-        var x = i*75;
-        var y = i*35;
+        var x = i*205;
+        var y = 185;
         var hand = this.players[i].getCurrentHand().setPosition(x, y);
     }
 }

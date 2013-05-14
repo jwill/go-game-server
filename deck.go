@@ -51,6 +51,10 @@ func NewHand() *Hand {
 	return h
 }
 
+func (hand *Hand)GetLastCard() *Card{
+	return hand.Cards[len(hand.Cards)-1:][0]
+}
+
 type Deck struct {
 	numDecks    int
 	cards       []*Card

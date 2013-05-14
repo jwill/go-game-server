@@ -287,21 +287,6 @@ func (h *GameHub) Run() {
 
 // Test Quizbowl
 func (h *GameHub) TestQuiz() {
-	d := NewDeck(2)
-	d.ShuffleDecks()
-	fmt.Println(d)
-	hand := NewHand()
-	hand.Cards = d.DealCards(4)
-	fmt.Println(hand.Cards)
-	fmt.Println(hand)
-
-	b, err := rjson.Marshal(hand)
-	if err == nil {
-		fmt.Println("serialize", string(b))
-	} else {
-		fmt.Println(err.Error())
-	}
-
 	//h.lobby.game = &RacingGame{}
 	//h.lobby.game.init()
 	//h.lobby.game.startGame(h.lobby, h)

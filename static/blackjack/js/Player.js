@@ -4,7 +4,7 @@ var Player = function () {
     this.playerImage = false;
 
     this.currentHand = 0;
-    this.currentBet = 1;
+    this.currentBet = 0;
     this.id = null;
     this.isPlayerTurn = false;
     this.isLocal = false;

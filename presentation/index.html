@@ -1,178 +1,190 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Getting started with WebGL and Three.js </title>
-    <meta charset='utf-8'/>
-    <script src='res/slides.js'></script>
-    <script src='res/showdown.js'></script>
-    <script src='res/markdownify.js'></script>
-    <script src='res/ga.js'></script>
+  <title>Getting started with WebGL and Three.js </title>
+  <meta charset='utf-8' />
+  <script src='res/slides.js'></script>
+  <script src='res/showdown.js'></script>
+  <script src='res/markdownify.js'></script>
+  <script src='res/ga.js'></script>
 </head>
 
 <body style='display: none'>
 
 <section class='slides layout-regular'>
 
-    <article data-markdown>
-        # Creating a HTML5 Game Server with Google Go
+<article data-markdown>
+# Creating a HTML5 Game Server with Google Go 
 
-        James Williams <br/>
-        [http://jameswilliams.be/+](http://jameswilliams.be/+) <br/>
-        [@ecspike](http://twitter.com/ecspike)
+James Williams <br/>
+[http://jameswilliams.be/+](http://jameswilliams.be/+) <br/>
+[@ecspike](http://twitter.com/ecspike)  
 
-        February 2013
-    </article>
 
-    <article data-markdown>
-        ### What is Go?
+</article>
 
-        * Announced in 2009
-        * Statically typed language with a C-like syntax
-        * Pass by value by default
-        * Compiles almost everywhere (including Raspberry Pi)
-        * [http://golang.org](http://golang.org)
-    </article>
+<article data-markdown>
+### Buy my book
+![](images/bookcover.jpg "Buy my book") 
+</article>
 
-    <article data-markdown>
-        ### Why build a game server in Go?
+<article data-markdown>
+### Buy my book ... in Chinese!
+![](images/chinese_cover_small.jpg "Buy my book in Chinese")
+</article>
 
-        * Wanted to learn Go
-        * Ease of concurrency seemed a good fit
-        * Sounded like a fun idea
-    </article>
 
-    <article data-markdown>
-        ### Game Server Components
+<article data-markdown>
+### What is Go?
 
-        * Gamehub
-        * Player / Connection
-        * Games
-    </article>
+* Announced in 2009
+* Statically typed language with a C-like syntax
+* Pass by value by default
+* Compiles almost everywhere (including Raspberry Pi)
+* [http://golang.org](http://golang.org)
+</article>
 
-    <article data-markdown>
-        ### N-factorial in Go
+<article data-markdown>
+### Why build a game server in Go?
 
-        package main
+* Wanted to learn Go
+* Ease of concurrency seemed a good fit
+* Sounded like a fun idea
+</article>
 
-        import "fmt"
+<article data-markdown>
+### Game Server Components
 
-        func fact(n int) int {
-        if n == 1 {
+* Gamehub
+* Player / Connection
+* Games
+</article>
+
+<article data-markdown>
+### N-factorial in Go
+
+    package main
+
+    import "fmt"
+
+    func fact(n int) int {
+      if n == 1 {
         return 1
-        }
-        return n * fact(n-1)
-        }
+      }
+      return n * fact(n-1)
+    }
 
-        func main() {
-        fmt.Println("5! =", fact(5))
-        }
-    </article>
+    func main() {
+      fmt.Println("5! =", fact(5))
+    }
+</article>
 
-    <article data-markdown>
-        ### Go structs
+<!--article data-markdown>
+### Go structs
 
-        * a type with named fields
-        * fields can be other structs
+* a type with named fields
+* fields can be other structs
 
-    </article>
+</article-->
 
-    <article data-markdown>
-        ### Player / Connection
+<article data-markdown>
+### Player / Connection
 
-        type connection struct {
-        // Websocket connection
-        ws *websocket.Conn
+    type connection struct {
+      // Websocket connection
+      ws *websocket.Conn
 
-        // Buffered channel for outbound messages
-        send chan string
-        }
+      // Buffered channel for outbound messages
+      send chan string
+    }
 
-        type Player struct {
-        conn *connection
-        name string
-        id string
-        data interface{}
-        }
-    </article>
+    type Player struct {
+      conn *connection
+      name string
+      id   string
+      data interface{}
+    }
+</article>
 
-    <article data-markdown>
-        ### Gamehub
-        type GameHub struct {
+<article data-markdown>
+### Gamehub
+    type GameHub struct {
+      
+      players map[string]*Player
 
-        players map[string]*Player
+      connections map[*connection]bool
 
-        connections map[*connection]bool
+      broadcast chan string    // Inbound messages from the connections
 
-        broadcast chan string // Inbound messages from the connections
+      register chan *Player    // Register requests from the connections
 
-        register chan *Player // Register requests from the connections
+      unregister chan *Player  // Unregister requests from the connections
 
-        unregister chan *Player // Unregister requests from the connections
+      rooms map[string]*GameRoom
 
-        rooms map[string]*GameRoom
+      lobby *GameRoom
+    }
 
-        lobby *GameRoom
-        }
-
-    </article>
-
-
-    <article data-markdown>
-        ### Interfaces
-
-        * Means of providing polymorphism and inheritance qualities to objects
-        * Doesn't need an explicit keyword or symbol
-    </article>
-
-    <article data-markdown>
-        ### Interface Example
-
-        type Game interface {
-        init()
-        HandleGameMessage(string, *GameHub) bool
-        }
-
-        type QuizBowlGame struct {
-        questions []Question
-        }
-
-        func (quiz *QuizBowlGame) init() {
-        quiz.loadQuestions()
-        }
-
-        func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
-        // function truncated
-        }
-    </article>
-
-    <article data-markdown>
-        ### Goroutines
-
-        * Similar to a lightweight thread
-        * Use channels to communicate
-    </article>
+</article>
 
 
-    <article data-markdown>
-        ### Example Goroutine
-        go func() {
-        for _, q := range quiz.questions {
+
+<article data-markdown>
+### Interfaces
+
+* Means of providing polymorphism and inheritance qualities to objects
+* Doesn't need an explicit keyword or symbol
+</article>
+
+<article data-markdown>
+### Interface Example
+
+    type Game interface {
+      init()
+      HandleGameMessage(string, *GameHub) bool
+    }
+
+    type QuizBowlGame struct {
+      questions []Question
+    }
+    
+    func (quiz *QuizBowlGame) init() {
+      quiz.loadQuestions()
+    }
+
+    func (quiz *QuizBowlGame) HandleGameMessage(msg string, h *GameHub) bool {
+      // function truncated
+    } 
+</article>
+
+<article data-markdown>
+### Goroutines
+
+* Similar to a lightweight thread
+* Use channels to communicate
+</article>
+
+
+<article data-markdown>
+### Example Goroutine   
+    go func() {
+      for _, q := range quiz.questions {
         time.Sleep(15 * time.Second)
         quiz.SendQuestion(room.roomId, q.QuestionId, h)
-        }
-        quiz.gameStarted = false
-        }()
-    </article>
+      }
+      quiz.gameStarted = false
+    }()
+</article>
 
-    <article data-markdown>
-        ### Channels
+<article data-markdown>
+### Channels
 
-        * Allow goroutines to communicate and synchronize
-        * Buffered vs Unbuffered
-    </article>
+* Allow goroutines to communicate and synchronize
+* Buffered vs Unbuffered
+</article>
 
-    <article data-markdown>
-        ### Goroutines and Channels
+<article data-markdown>
+### Goroutines and Channels
 <pre>
 type Message struct {
   Operation    string
@@ -194,16 +206,16 @@ func (p *Player) SendPlayerIdentity() {
   p.conn.send &lt;- string(b)
 }
 </pre>
-    </article>
+</article>
 
 
-    <article data-markdown>
-        # Demos
-    </article>
+<article data-markdown>
+# Demos
+</article>
 
-    <article data-markdown>
-        # Questions ?
-    </article>
+<article data-markdown>
+# Questions ?
+</article>
 </section>
 </body>
 </html>
